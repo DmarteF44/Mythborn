@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CharacterEvolutionData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/characters/CharacterEvolutionData.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Spark.tscn" id="2"]
+
+[resource]
+script = ExtResource("1")
+stage = 2
+level_required = 30
+display_name = "SUN WUKONG DESPERTADO"
+health_bonus_mult = 1.2
+move_speed_bonus_mult = 1.15
+damage_bonus_mult = 1.25
+attack_speed_bonus_mult = 1.15
+unlocked_power_scene = ExtResource("2")
+unlocked_power_label = "FAGULHA DIVINA"

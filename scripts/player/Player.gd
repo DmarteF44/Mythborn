@@ -1,12 +1,11 @@
 class_name Player
 extends CharacterBody2D
 
-@export var starting_weapons: Array[PackedScene] = []
-
 @onready var stats: PlayerStats = $PlayerStats
 @onready var health: Health = $Health
 @onready var experience: PlayerExperience = $PlayerExperience
 @onready var weapon_inventory: WeaponInventory = $WeaponInventory
+@onready var progression: CharacterProgression = $CharacterProgression
 
 
 var _last_health: float = -1.0
@@ -14,10 +13,16 @@ var _last_health: float = -1.0
 
 func _ready() -> void:
 	add_to_group("player")
+
+	var character_data := progression.character_data
+	health.max_health = character_data.base_health
+	health.current_health = character_data.base_health
+	stats.base_move_speed = character_data.base_move_speed
+
 	health.died.connect(_on_died)
 	health.health_changed.connect(_on_health_changed)
-	for weapon_scene in starting_weapons:
-		weapon_inventory.add_weapon(weapon_scene)
+
+	weapon_inventory.add_weapon(character_data.starting_weapon)
 
 
 func _physics_process(_delta: float) -> void:

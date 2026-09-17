@@ -4,7 +4,7 @@
 
 Mythborn é um roguelite de sobrevivência em arena, em visão 2D top-down, no ritmo de jogos como Brotato. O jogador controla um macaco aparentemente comum que, ao longo da progressão narrativa, descobre ser Sun Wukong, o Rei Macaco. O universo pode reunir elementos de diferentes mitologias, mas com identidade visual, narrativa e mecânica própria.
 
-Esta etapa cobre apenas o **protótipo jogável**: validar o núcleo de gameplay com placeholders, sem arte definitiva e sem os sistemas narrativos completos.
+Esta etapa cobre a primeira implementação de referência de um personagem completo — **Sun Wukong** — com evolução por nível, uma build livre construída via uma loja de upgrades unificada, e uma moeda temporária de run (Essência). Ainda com placeholders visuais, sem arte definitiva e sem os sistemas narrativos completos.
 
 ## 2. Pilares do Gameplay
 
@@ -46,8 +46,15 @@ Esta etapa cobre apenas o **protótipo jogável**: validar o núcleo de gameplay
 ### Limite de 12 Armas
 
 - O jogador pode carregar **no máximo 12 armas simultâneas**.
-- O inventário de armas (`WeaponInventory`) é a fonte única de verdade sobre quais armas estão equipadas, preparado desde já para adicionar, remover e futuramente evoluir armas.
-- Nesta etapa apenas uma arma (Bastão) é implementada, mas o inventário já respeita o limite de 12 e está pronto para receber novas armas.
+- O inventário de armas (`WeaponInventory`) é a fonte única de verdade sobre quais armas estão equipadas, preparado desde já para adicionar, remover e futuramente evoluir armas. Ele também impede duplicar uma arma que o jogador já possui (`has_weapon`), seja comprando na loja ou recebendo de uma evolução de personagem.
+
+### Armas Implementadas
+
+- **Ruyi Jingu Bang** (Bastão de Sun Wukong): corpo a corpo, alcance curto, dano direto, com um arco de golpe visível e flash de impacto no alvo. Arma inicial de Wukong.
+- **Clones de Pelo**: poder característico de Wukong, desbloqueado ao evoluir para SUN WUKONG. Atinge até 2 inimigos próximos por ciclo — pequenos "ataques adicionais" simultâneos ao Bastão.
+- **Fagulha Divina**: arma de longo alcance à base de projétil, deliberadamente **sem vínculo com nenhuma mitologia específica** — prova de que a build de Wukong não fica presa a poderes chineses (ver seção "Personagem e Build" abaixo). Desbloqueada ao atingir SUN WUKONG DESPERTADO, ou comprável antes disso na loja.
+
+Todas as três podem coexistir no inventário, cada uma com seu próprio cooldown e alcance, todas usando o mesmo sistema de targeting.
 
 ## 8. Experiência (XP)
 
@@ -59,33 +66,72 @@ Esta etapa cobre apenas o **protótipo jogável**: validar o núcleo de gameplay
 
 - Ao atingir o XP necessário, o jogador sobe de nível.
 - A ação do jogo é pausada temporariamente.
-- São exibidas **3 opções de melhoria** sorteadas aleatoriamente (sem repetição entre si na mesma tela).
-- O jogador escolhe **1** das 3 opções; o efeito é aplicado imediatamente e o jogo é despausado.
+- O jogador ganha Essência (moeda da run) e um "token" de escolha grátis.
+- Se o nível atingido corresponde a uma evolução de personagem (ver seção 10), primeiro aparece a **Tela de Evolução**; só depois disso abre a **Loja de Upgrades**.
+- Caso contrário, a Loja de Upgrades abre diretamente.
 - O requisito de XP para o próximo nível cresce a cada nível.
 
-## 10. Sistema de Melhorias (Upgrades)
+## 10. Personagem e Evolução — Sun Wukong
 
-Melhorias disponíveis no protótipo (conjunto inicial, deliberadamente simples):
+O primeiro personagem jogável completo do Mythborn é **Sun Wukong**, com três estágios ao longo da run:
 
-- **+Dano**: aumenta o multiplicador de dano de todas as armas.
-- **+Velocidade de Ataque**: reduz o cooldown de todas as armas.
-- **+Velocidade de Movimento**: aumenta a velocidade de deslocamento do jogador.
+| Estágio | Nível | Nome exibido | Ganhos |
+|---|---|---|---|
+| Inicial | 1+ | WUKONG | — |
+| Evoluído | 15 | SUN WUKONG | +25% vida, +10% velocidade, +15% dano, desbloqueia **Clones de Pelo** |
+| Despertado | 30 | SUN WUKONG DESPERTADO | +20% vida, +15% velocidade, +25% dano, +15% velocidade de ataque, desbloqueia **Fagulha Divina** |
 
-Os upgrades são definidos como dados (`UpgradeData`), não como código específico espalhado pela base — isso permite adicionar novas melhorias apenas descrevendo seus dados e efeito, sem reescrever a tela de level-up.
+Ao atingir um desses níveis, o jogo mostra uma tela de evolução simples (nome antigo → novo nome, ganhos, novo poder) antes de voltar ao fluxo normal. Os bônus de evolução são multiplicadores separados dos bônus de upgrades da loja — os dois se acumulam sem conflitar.
 
-## 11. Progressão Narrativa
+**Importante**: Sun Wukong não fica limitado a poderes chineses. A Fagulha Divina, por exemplo, é deliberadamente uma arma sem mitologia associada — a build da run pode incluir qualquer combinação de armas/poderes, futuramente de qualquer panteão (Zeus, Anúbis, Thor, Hades...), independente da origem do personagem.
+
+## 11. Loja Unificada de Upgrades
+
+Ao subir de nível, a Loja de Upgrades reúne em uma única tela tudo que o jogador pode adquirir para a build da run:
+
+- **Armas** (ex.: Fagulha Divina) — ocupam um slot do inventário (limite de 12).
+- **Poderes** (ex.: Clones de Pelo) — tecnicamente também armas, ocupam slot.
+- **Passivas** (ex.: +Dano, +Vida) — não ocupam slot, apenas ajustam multiplicadores do jogador.
+
+Cada oferta mostra categoria, nome, descrição e preço em Essência. Um botão **REROLL** gera um novo conjunto de ofertas por um custo crescente. O jogador pode comprar **múltiplas ofertas na mesma visita** (enquanto tiver Essência), e só fecha a loja manualmente pelo botão **CONTINUAR** — o jogo permanece pausado até lá.
+
+A primeira compra de cada visita à loja é sempre gratuita (consome o "token" ganho ao subir de nível), então subir de nível nunca é frustrante mesmo com pouca Essência acumulada.
+
+### Regras de Oferta
+
+- Uma arma que o jogador já possui nunca é oferecida novamente.
+- Se o inventário de armas já estiver no limite de 12, a oferta de arma aparece desabilitada com o motivo explicado ("Inventário de armas cheio"), nunca escondida sem explicação.
+- Nenhuma oferta repete o mesmo item na mesma tela.
+
+## 12. Essência (Economia da Run)
+
+- Moeda temporária, existe apenas durante a run atual — não é salva entre partidas.
+- Ganha derrotando inimigos e ao subir de nível (bônus fixo + o token de compra grátis).
+- Gasta na Loja de Upgrades (compras e reroll).
+- Não confundir com progressão permanente: isso ainda não existe no Mythborn.
+
+## 13. Passivas e Poderes de Wukong
+
+Passivas disponíveis nesta etapa (todas empilháveis, cada compra soma o efeito de novo):
+
+- **+Dano**, **+Velocidade de Ataque**, **+Velocidade de Movimento**, **+Vida Máxima**, **+XP Ganho**.
+- **Nuvem Ventania**: poder característico de Wukong, mecanicamente uma passiva de velocidade de movimento.
+
+Um upgrade novo é apenas uma entrada de dados a mais — nenhuma dessas passivas exigiu tocar na tela de compra.
+
+## 14. Progressão Narrativa
 
 - Fora do escopo desta etapa a implementação completa, mas a arquitetura deve permitir, futuramente:
   - Desbloqueio gradual da identidade de Sun Wukong.
   - Eventos ou marcos narrativos entre partidas.
   - Novas armas/poderes mitológicos associados a essa progressão.
 
-## 12. Progressão Permanente
+## 15. Progressão Permanente
 
 - Fora do escopo de implementação nesta etapa (sem loja, sem meta-progressão complexa).
 - A arquitetura deve deixar espaço para, futuramente, bônus permanentes persistidos entre partidas (ex.: vida base maior, desbloqueio de armas iniciais).
 
-## 13. Estrutura Básica de uma Partida
+## 16. Estrutura Básica de uma Partida
 
 1. Jogador entra na arena.
 2. Inimigos começam a spawnar periodicamente e perseguem o jogador.
@@ -94,27 +140,29 @@ Os upgrades são definidos como dados (`UpgradeData`), não como código especí
 5. Jogador coleta XP e sobe de nível, escolhendo melhorias.
 6. O ciclo se repete, com inimigos surgindo continuamente, até a morte do jogador (fim de partida).
 
-## 14. Tipos Iniciais de Inimigos
+## 17. Tipos Iniciais de Inimigos
 
 Apenas um tipo nesta etapa:
 
 - **Inimigo Básico (Grunt)**: sem ataque à distância, persegue o jogador em linha reta e causa dano por contato. Vida, velocidade, dano de contato e XP concedido são definidos via dado (`EnemyData`), preparando o terreno para novos tipos apenas com novos dados/cenas.
 
-## 15. Escopo do Protótipo
+## 18. Escopo do Protótipo
 
 Incluído nesta etapa:
 
 - Movimento do jogador em 8 direções.
 - Uma arena simples e fechada.
 - Um tipo de inimigo com spawn contínuo.
-- Uma arma automática (Bastão) com dano, alcance e cooldown.
+- Sun Wukong como personagem jogável, com evolução em 3 estágios (WUKONG → SUN WUKONG → SUN WUKONG DESPERTADO).
+- Três armas/poderes (Ruyi Jingu Bang, Clones de Pelo, Fagulha Divina) coexistindo no mesmo inventário.
 - Sistema de vida e dano (jogador e inimigos).
-- Sistema de XP e level-up com 3 escolhas de melhoria.
-- Inventário de armas preparado para até 12 armas.
-- Interface mínima (vida, XP, nível, timer, arma atual, tela de level-up).
-- Estrutura completa de navegação: Menu Principal, Pause (com Configurações e saída confirmada), Game Over com resultados da corrida, e reinício limpo da partida.
+- Sistema de XP, level-up, evolução de personagem e Loja Unificada de Upgrades (armas, passivas e poderes, com reroll).
+- Essência como moeda temporária da run.
+- Inventário de armas preparado para até 12 armas, sem duplicar itens já possuídos.
+- Interface mínima (vida, XP, nível, timer, Essência, estágio do personagem, armas atuais).
+- Estrutura completa de navegação: Menu Principal, Pause (com Configurações e saída confirmada, sem sobreposição de telas), Game Over com resultados da corrida, e reinício limpo da partida.
 
-## 16. Fluxo Global do Jogo
+## 19. Fluxo Global do Jogo
 
 O jogo agora tem uma estrutura de navegação completa, não apenas a arena:
 
@@ -122,19 +170,22 @@ O jogo agora tem uma estrutura de navegação completa, não apenas a arena:
 MENU PRINCIPAL
    ↓ (JOGAR)
 PARTIDA (PLAYING)
-   ↓ (subir de nível)          ↓ (botão de pause)
-LEVEL UP  ──────────────→  PAUSE
-   ↓ (escolher melhoria)       ↓ (continuar)
-PARTIDA (PLAYING)  ←───────────┘
+   ↓ (sobe de nível)                      ↓ (botão de pause)
+nível de evolução? ─sim→ EVOLUÇÃO         PAUSE
+   │não                     ↓ (continuar)    ↓ (continuar)
+   ↓                     LOJA DE UPGRADES     │
+   └──────────────────→ (compra/reroll) ──────┘
+                            ↓ (continuar)
+PARTIDA (PLAYING)  ←────────┘
    ↓ (morte do jogador)
 GAME OVER / RESULTADOS
    ↓                    ↓
 JOGAR NOVAMENTE     MENU PRINCIPAL
 ```
 
-Estados possíveis (`GameManager.State`): `MAIN_MENU`, `PLAYING`, `LEVEL_UP`, `PAUSED`, `GAME_OVER`. Level Up e Pause são duas pausas conceitualmente diferentes (uma automática por progressão, outra manual pedida pelo jogador), mas ambas usam o mesmo mecanismo de pausa da engine e o mesmo caminho de retorno (`resume_gameplay()`).
+Estados possíveis (`GameManager.State`): `MAIN_MENU`, `PLAYING`, `EVOLUTION`, `UPGRADE_SHOP`, `PAUSED`, `GAME_OVER`. Evolução, Loja de Upgrades e Pause são três pausas conceitualmente diferentes (duas automáticas por progressão, uma manual pedida pelo jogador), mas todas usam o mesmo mecanismo de pausa da engine e o mesmo caminho de retorno (`resume_gameplay()`). Apenas um estado de UI principal fica ativo por vez — nunca duas telas de pausa sobrepostas.
 
-## 17. Menu Principal
+## 20. Menu Principal
 
 Tela inicial do jogo (`MainMenu.tscn`), com:
 
@@ -143,15 +194,16 @@ Tela inicial do jogo (`MainMenu.tscn`), com:
 - Botão **CONFIGURAÇÕES** — abre o painel de configurações por cima do menu.
 - Uma fileira de botões desabilitados ("Coleção", "Progressão", "Conquistas") reservando espaço visual para funcionalidades futuras — não fazem nada nesta etapa.
 
-## 18. Pause
+## 21. Pause
 
 Acessível durante a partida por um botão discreto no canto superior direito do HUD. Ao pausar:
 
-- todo o gameplay congela (inimigos, timer, ataques, movimentação, ganho de XP) — o mesmo mecanismo de pausa usado no Level Up;
+- todo o gameplay congela (inimigos, timer, ataques, movimentação, ganho de XP) — o mesmo mecanismo de pausa usado na Evolução e na Loja de Upgrades;
 - é exibido um painel com **CONTINUAR**, **CONFIGURAÇÕES** e **SAIR DA PARTIDA**;
+- ao abrir **CONFIGURAÇÕES**, o painel de Pause fica completamente oculto (nunca as duas telas desenhadas ao mesmo tempo); **VOLTAR** retorna ao Pause, nunca direto ao gameplay;
 - **SAIR DA PARTIDA** pede confirmação antes de descartar a corrida atual e voltar ao Menu Principal — o jogador nunca sai de uma partida ativa sem confirmar.
 
-## 19. Configurações
+## 22. Configurações
 
 Painel reutilizável (mesma cena instanciada no Menu Principal e no Pause), com três opções realmente funcionais:
 
@@ -161,7 +213,7 @@ Painel reutilizável (mesma cena instanciada no Menu Principal e no Pause), com 
 
 As preferências são salvas em `user://settings.cfg` e persistem entre sessões.
 
-## 20. Game Over e Resultados
+## 23. Game Over e Resultados
 
 Ao morrer, o jogador vê imediatamente a tela de Game Over com o resultado da corrida:
 
@@ -172,17 +224,20 @@ Ao morrer, o jogador vê imediatamente a tela de Game Over com o resultado da co
 
 Dali, pode escolher **JOGAR NOVAMENTE** (inicia uma corrida nova e limpa) ou **MENU PRINCIPAL**.
 
-## 21. Estatísticas da Partida
+## 24. Estatísticas da Partida
 
 Dados temporários da corrida atual (não persistem entre partidas) ficam centralizados e são reiniciados a cada nova run: tempo sobrevivido, inimigos derrotados, nível alcançado, upgrades escolhidos e armas possuídas.
 
-## 22. Funcionalidades Planejadas para Etapas Futuras
+## 25. Funcionalidades Planejadas para Etapas Futuras
 
-- Múltiplas armas simultâneas até o limite de 12.
-- Evolução de armas.
+- Novos personagens (Zeus, Hades, Thor, Anúbis...), reutilizando `CharacterData`/`CharacterProgression`.
+- Mais armas/poderes de outras mitologias na build de qualquer personagem.
+- Evolução de armas individuais (não apenas do personagem).
 - Novos tipos de inimigos e chefes.
-- Poderes mitológicos e identidade de Sun Wukong.
 - Progressão narrativa completa.
-- Progressão permanente entre partidas (meta progression) e loja.
+- Progressão permanente entre partidas (meta progression) e desbloqueio de personagens.
+- Relíquias (categoria já reservada na loja, sem conteúdo ainda).
+- Níveis reais de passivas (Power I/II/III) em vez de empilhar o mesmo bônus repetidamente.
+- Localidades e modos de jogo (Endless, Challenge, Boss Rush, Chaos).
 - Arte definitiva substituindo os placeholders.
-- Balanceamento e ajuste fino de dificuldade.
+- Balanceamento e ajuste fino de dificuldade e economia de Essência.

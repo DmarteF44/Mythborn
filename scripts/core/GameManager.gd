@@ -2,9 +2,10 @@ extends Node
 
 ## Autoload — estado global e navegação entre menu/partida.
 ## Não guarda lógica de UI: apenas estado, troca de cena e pausa.
-## Dados da corrida ficam em RunStats; preferências ficam em Settings.
+## Dados da corrida ficam em RunStats, moeda da run em Economy,
+## preferências em Settings.
 
-enum State { MAIN_MENU, PLAYING, LEVEL_UP, PAUSED, GAME_OVER }
+enum State { MAIN_MENU, PLAYING, EVOLUTION, UPGRADE_SHOP, PAUSED, GAME_OVER }
 
 const MAX_WEAPONS: int = 12
 
@@ -20,6 +21,7 @@ var state: State = State.MAIN_MENU
 func start_new_run() -> void:
 	RunStats.reset()
 	RunStats.active = true
+	Economy.reset()
 	get_tree().paused = false
 	_set_state(State.PLAYING)
 	get_tree().change_scene_to_file(GAME_SCENE)
@@ -39,8 +41,13 @@ func open_pause() -> void:
 	get_tree().paused = true
 
 
-func open_level_up() -> void:
-	_set_state(State.LEVEL_UP)
+func open_evolution() -> void:
+	_set_state(State.EVOLUTION)
+	get_tree().paused = true
+
+
+func open_upgrade_shop() -> void:
+	_set_state(State.UPGRADE_SHOP)
 	get_tree().paused = true
 
 

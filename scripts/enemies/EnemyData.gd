@@ -8,3 +8,4 @@ extends Resource
 @export var move_speed: float = 90.0
 @export var contact_damage: float = 5.0
 @export var xp_value: float = 5.0
+@export var essence_value: int = 3

@@ -4,10 +4,10 @@
 
 [resource]
 script = ExtResource("1")
-id = "staff"
-display_name = "Ruyi Jingu Bang"
-damage = 5.0
-cooldown = 0.7
-range = 90.0
-price = 0
+id = "spark"
+display_name = "Fagulha Divina"
+damage = 4.0
+cooldown = 1.0
+range = 260.0
+price = 25
 shop_category = 0

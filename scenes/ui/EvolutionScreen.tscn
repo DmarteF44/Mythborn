@@ -1,0 +1,87 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/EvolutionScreen.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.1, 0.08, 0.14, 0.97)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+content_margin_left = 36.0
+content_margin_top = 36.0
+content_margin_right = 36.0
+content_margin_bottom = 36.0
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.85, 0.3, 0.8)
+
+[node name="EvolutionScreen" type="CanvasLayer"]
+process_mode = 3
+script = ExtResource("1")
+
+[node name="Dim" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.75)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 24
+modulate = Color(1, 0.85, 0.3, 1)
+text = "EVOLUÇÃO DESBLOQUEADA"
+
+[node name="FromLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 26
+modulate = Color(1, 1, 1, 0.6)
+text = "WUKONG"
+
+[node name="Arrow" type="Label" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 20
+text = "↓"
+
+[node name="ToLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 38
+text = "SUN WUKONG"
+
+[node name="BonusLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "+25% Vida · +10% Velocidade · +15% Dano"
+
+[node name="PowerLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 20
+modulate = Color(0.6, 1, 0.8, 1)
+text = "NOVO PODER: CLONES DE PELO"
+
+[node name="ContinueButton" type="Button" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 76)
+theme_override_font_sizes/font_size = 24
+text = "CONTINUAR"

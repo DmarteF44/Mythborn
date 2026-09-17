@@ -4,10 +4,10 @@
 
 [resource]
 script = ExtResource("1")
-id = "staff"
-display_name = "Ruyi Jingu Bang"
-damage = 5.0
-cooldown = 0.7
-range = 90.0
-price = 0
-shop_category = 0
+id = "hair_clones"
+display_name = "Clones de Pelo"
+damage = 3.0
+cooldown = 1.4
+range = 140.0
+price = 20
+shop_category = 2

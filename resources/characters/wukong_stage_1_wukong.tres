@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CharacterEvolutionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/characters/CharacterEvolutionData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+stage = 0
+level_required = 1
+display_name = "WUKONG"
+health_bonus_mult = 1.0
+move_speed_bonus_mult = 1.0
+damage_bonus_mult = 1.0
+attack_speed_bonus_mult = 1.0
+unlocked_power_label = ""

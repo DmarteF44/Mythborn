@@ -33,3 +33,14 @@ func heal(amount: float) -> void:
 
 func is_dead() -> bool:
 	return current_health <= 0.0
+
+
+## Usado por evolução de personagem e pela passiva de Vitalidade — aumenta a
+## vida máxima e cura a diferença como um pequeno bônus imediato.
+func apply_max_health_multiplier(mult: float) -> void:
+	var bonus := max_health * (mult - 1.0)
+	if bonus <= 0.0:
+		return
+	max_health += bonus
+	current_health += bonus
+	health_changed.emit(current_health, max_health)

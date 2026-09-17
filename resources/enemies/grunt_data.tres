@@ -9,3 +9,4 @@ max_health = 10.0
 move_speed = 90.0
 contact_damage = 5.0
 xp_value = 5.0
+essence_value = 3

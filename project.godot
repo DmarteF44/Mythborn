@@ -15,7 +15,9 @@ config/features=PackedStringArray("4.3", "GL Compatibility")
 GameManager="*res://scripts/core/GameManager.gd"
 RunStats="*res://scripts/core/RunStats.gd"
 Settings="*res://scripts/core/Settings.gd"
+Economy="*res://scripts/core/Economy.gd"
 Upgrades="*res://scripts/upgrades/UpgradePool.gd"
+Weapons="*res://scripts/weapons/WeaponPool.gd"
 
 [audio]
 

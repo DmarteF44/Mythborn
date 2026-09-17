@@ -59,6 +59,7 @@ func _deal_contact_damage() -> void:
 
 func _on_died() -> void:
 	RunStats.register_kill()
+	Economy.add(enemy_data.essence_value)
 	_spawn_xp_gem()
 	queue_free()
 

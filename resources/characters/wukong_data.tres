@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/characters/CharacterData.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Staff.tscn" id="2"]
+[ext_resource type="Resource" path="res://resources/characters/wukong_stage_1_wukong.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/characters/wukong_stage_2_sun_wukong.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/characters/wukong_stage_3_awakened.tres" id="5"]
+
+[resource]
+script = ExtResource("1")
+id = "wukong"
+character_name = "wukong"
+display_name = "Wukong"
+origin = "Mitologia Chinesa"
+description = "Um macaco aparentemente comum, escondendo o poder do lendário Rei Macaco."
+base_health = 30.0
+base_move_speed = 220.0
+starting_weapon = ExtResource("2")
+evolutions = Array[CharacterEvolutionData]([ExtResource("3"), ExtResource("4"), ExtResource("5")])

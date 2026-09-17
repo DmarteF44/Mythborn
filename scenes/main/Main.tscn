@@ -1,14 +1,15 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/main/Main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="2"]
 [ext_resource type="Script" path="res://scripts/enemies/EnemySpawner.gd" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/Enemy.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="5"]
-[ext_resource type="PackedScene" path="res://scenes/ui/LevelUpScreen.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/ui/UpgradeShop.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/ui/TouchControls.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://scenes/ui/PauseMenu.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/ui/GameOverScreen.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/ui/EvolutionScreen.tscn" id="10"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_h"]
 size = Vector2(1680, 40)
@@ -64,10 +65,12 @@ spawn_radius = 500.0
 
 [node name="HUD" parent="." instance=ExtResource("5")]
 
-[node name="LevelUpScreen" parent="." instance=ExtResource("6")]
+[node name="UpgradeShop" parent="." instance=ExtResource("6")]
 
 [node name="TouchControls" parent="." instance=ExtResource("7")]
 
 [node name="PauseMenu" parent="." instance=ExtResource("8")]
 
 [node name="GameOverScreen" parent="." instance=ExtResource("9")]
+
+[node name="EvolutionScreen" parent="." instance=ExtResource("10")]

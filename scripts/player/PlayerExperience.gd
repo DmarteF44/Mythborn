@@ -12,6 +12,7 @@ signal leveled_up(new_level: int)
 var level: int = 1
 var current_xp: float = 0.0
 var xp_to_next: float = 0.0
+var xp_gain_mult: float = 1.0
 
 
 func _ready() -> void:
@@ -20,7 +21,7 @@ func _ready() -> void:
 
 
 func add_xp(amount: float) -> void:
-	current_xp += amount
+	current_xp += amount * xp_gain_mult
 	while current_xp >= xp_to_next:
 		current_xp -= xp_to_next
 		level += 1

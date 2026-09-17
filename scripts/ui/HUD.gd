@@ -6,13 +6,19 @@ signal pause_requested
 @onready var health_bar: ProgressBar = $TopBar/HBox/StatsVBox/HealthBar
 @onready var xp_bar: ProgressBar = $TopBar/HBox/StatsVBox/XPBar
 @onready var level_label: Label = $TopBar/HBox/StatsVBox/InfoRow/LevelLabel
-@onready var timer_label: Label = $TopBar/HBox/StatsVBox/InfoRow/TimerLabel
+@onready var stage_label: Label = $TopBar/HBox/StatsVBox/InfoRow/StageLabel
+@onready var timer_label: Label = $TopBar/HBox/StatsVBox/ResourceRow/TimerLabel
+@onready var essence_label: Label = $TopBar/HBox/StatsVBox/ResourceRow/EssenceLabel
 @onready var weapon_label: Label = $TopBar/HBox/StatsVBox/WeaponLabel
 @onready var pause_button: Button = $TopBar/HBox/PauseButton
+
+var _player: Player = null
 
 
 func _ready() -> void:
 	pause_button.pressed.connect(func() -> void: pause_requested.emit())
+	Economy.essence_changed.connect(_on_essence_changed)
+	_on_essence_changed(Economy.essence)
 
 
 func _process(_delta: float) -> void:
@@ -20,6 +26,8 @@ func _process(_delta: float) -> void:
 
 
 func bind_to_player(player: Player) -> void:
+	_player = player
+
 	player.health.health_changed.connect(_on_health_changed)
 	health_bar.max_value = player.health.max_health
 	health_bar.value = player.health.current_health
@@ -28,6 +36,9 @@ func bind_to_player(player: Player) -> void:
 	player.experience.leveled_up.connect(_on_leveled_up)
 	_on_xp_changed(player.experience.current_xp, player.experience.xp_to_next)
 	_on_leveled_up(player.experience.level)
+
+	player.progression.evolved.connect(func(_evo: CharacterEvolutionData) -> void: _update_stage_label())
+	_update_stage_label()
 
 	player.weapon_inventory.weapon_added.connect(_on_weapon_added)
 	_update_weapon_label(player.weapon_inventory.weapons)
@@ -44,13 +55,20 @@ func _on_xp_changed(current: float, to_next: float) -> void:
 
 
 func _on_leveled_up(new_level: int) -> void:
-	level_label.text = "Nível %d" % new_level
+	level_label.text = "LV %d" % new_level
+
+
+func _on_essence_changed(current: int) -> void:
+	essence_label.text = "Essência %d" % current
+
+
+func _update_stage_label() -> void:
+	stage_label.text = _player.progression.get_display_name()
 
 
 func _on_weapon_added(_weapon: Weapon) -> void:
-	var player := TargetingUtils.get_player() as Player
-	if player != null:
-		_update_weapon_label(player.weapon_inventory.weapons)
+	if _player != null:
+		_update_weapon_label(_player.weapon_inventory.weapons)
 
 
 func _update_weapon_label(weapons: Array[Weapon]) -> void:

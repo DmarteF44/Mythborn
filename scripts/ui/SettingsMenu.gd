@@ -3,7 +3,11 @@ extends CanvasLayer
 
 ## Painel de configurações reutilizável — instanciado tanto pelo Menu
 ## Principal quanto pelo Pause. Não decide o que acontece ao fechar,
-## apenas se esconde; quem o abriu continua visível por baixo.
+## apenas se esconde e avisa via sinal — quem o abriu decide o que
+## reaparecer por baixo (ver PauseMenu.gd para a correção do bug de
+## sobreposição Pause/Configurações).
+
+signal closed
 
 @onready var sound_button: Button = $Panel/Background/VBox/SoundRow/SoundButton
 @onready var music_button: Button = $Panel/Background/VBox/MusicRow/MusicButton
@@ -26,6 +30,7 @@ func open() -> void:
 
 func close() -> void:
 	visible = false
+	closed.emit()
 
 
 func _on_sound_pressed() -> void:
