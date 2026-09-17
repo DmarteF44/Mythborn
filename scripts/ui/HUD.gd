@@ -40,8 +40,9 @@ func bind_to_player(player: Player) -> void:
 	player.progression.evolved.connect(func(_evo: CharacterEvolutionData) -> void: _update_stage_label())
 	_update_stage_label()
 
-	player.weapon_inventory.weapon_added.connect(_on_weapon_added)
-	_update_weapon_label(player.weapon_inventory.weapons)
+	player.weapon_inventory.weapon_added.connect(_on_weapon_inventory_changed)
+	player.weapon_inventory.weapon_fused.connect(func(_w: Weapon) -> void: _update_weapon_label())
+	_update_weapon_label()
 
 
 func _on_health_changed(current: float, max_value: float) -> void:
@@ -66,13 +67,15 @@ func _update_stage_label() -> void:
 	stage_label.text = _player.progression.get_display_name()
 
 
-func _on_weapon_added(_weapon: Weapon) -> void:
-	if _player != null:
-		_update_weapon_label(_player.weapon_inventory.weapons)
+func _on_weapon_inventory_changed(_weapon: Weapon) -> void:
+	_update_weapon_label()
 
 
-func _update_weapon_label(weapons: Array[Weapon]) -> void:
-	var names: Array[String] = []
-	for weapon in weapons:
-		names.append(weapon.weapon_data.display_name)
-	weapon_label.text = "Armas (%d/%d): %s" % [weapons.size(), GameManager.MAX_WEAPONS, ", ".join(names)]
+func _update_weapon_label() -> void:
+	if _player == null:
+		return
+	var parts: Array[String] = []
+	for group in _player.weapon_inventory.get_grouped_weapons():
+		var weapon_data: WeaponData = group["weapon_data"]
+		parts.append("%s Lv.%d×%d" % [weapon_data.display_name, group["level"], group["count"]])
+	weapon_label.text = "Armas %d/%d: %s" % [_player.weapon_inventory.weapons.size(), GameManager.MAX_WEAPONS, ", ".join(parts)]

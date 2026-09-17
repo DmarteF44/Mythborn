@@ -5,7 +5,7 @@ extends Weapon
 ## ciclo, um dano menor que o Bastão mas atingindo mais de um alvo.
 
 func _perform_attack(_target: Node2D) -> void:
-	var targets := TargetingUtils.get_enemies_in_range(global_position, weapon_data.range, 2)
+	var targets := TargetingUtils.get_enemies_in_range(global_position, _get_effective_range(), 2)
 	for target in targets:
 		var target_health := target.get_node_or_null("Health") as Health
 		if target_health != null:

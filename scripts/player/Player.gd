@@ -6,6 +6,8 @@ extends CharacterBody2D
 @onready var experience: PlayerExperience = $PlayerExperience
 @onready var weapon_inventory: WeaponInventory = $WeaponInventory
 @onready var progression: CharacterProgression = $CharacterProgression
+@onready var passives: PlayerPassives = $PlayerPassives
+@onready var pickup_magnet: PickupMagnet = $PickupMagnet
 
 
 var _last_health: float = -1.0
@@ -23,6 +25,7 @@ func _ready() -> void:
 	health.health_changed.connect(_on_health_changed)
 
 	weapon_inventory.add_weapon(character_data.starting_weapon)
+	pickup_magnet.set_radius(stats.get_pickup_radius())
 
 
 func _physics_process(_delta: float) -> void:

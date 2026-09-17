@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/UpgradeShop.gd" id="1"]
 
@@ -9,9 +9,20 @@ corner_radius_top_right = 16
 corner_radius_bottom_right = 16
 corner_radius_bottom_left = 16
 content_margin_left = 24.0
-content_margin_top = 24.0
+content_margin_top = 20.0
 content_margin_right = 24.0
-content_margin_bottom = 24.0
+content_margin_bottom = 20.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm"]
+bg_color = Color(0.1, 0.08, 0.08, 0.98)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+content_margin_left = 32.0
+content_margin_top = 28.0
+content_margin_right = 32.0
+content_margin_bottom = 28.0
 
 [node name="UpgradeShop" type="CanvasLayer"]
 process_mode = 3
@@ -27,43 +38,73 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 
 [node name="Panel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(660, 0)
+custom_minimum_size = Vector2(680, 0)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="VBox" type="VBoxContainer" parent="CenterContainer/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="CenterContainer/Panel/VBox"]
 layout_mode = 2
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 28
 text = "LEVEL UP!"
 
 [node name="HeaderRow" type="HBoxContainer" parent="CenterContainer/Panel/VBox"]
 layout_mode = 2
 
-[node name="EssenceLabel" type="Label" parent="CenterContainer/Panel/VBox/HeaderRow"]
+[node name="LevelLabel" type="Label" parent="CenterContainer/Panel/VBox/HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
+text = "NÍVEL 1"
+
+[node name="EssenceLabel" type="Label" parent="CenterContainer/Panel/VBox/HeaderRow"]
+layout_mode = 2
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 16
 text = "Essência: 0"
 
 [node name="FreeHintLabel" type="Label" parent="CenterContainer/Panel/VBox"]
 layout_mode = 2
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 14
 modulate = Color(0.6, 1, 0.8, 1)
 text = "Você tem 1 escolha grátis nesta loja!"
 
-[node name="Scroll" type="ScrollContainer" parent="CenterContainer/Panel/VBox"]
-custom_minimum_size = Vector2(0, 520)
+[node name="MainScroll" type="ScrollContainer" parent="CenterContainer/Panel/VBox"]
+custom_minimum_size = Vector2(0, 760)
 layout_mode = 2
 
-[node name="OffersContainer" type="VBoxContainer" parent="CenterContainer/Panel/VBox/Scroll"]
+[node name="ContentVBox" type="VBoxContainer" parent="CenterContainer/Panel/VBox/MainScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="BuildTitle" type="Label" parent="CenterContainer/Panel/VBox/MainScroll/ContentVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+modulate = Color(1, 0.85, 0.5, 1)
+text = "SUA BUILD"
+
+[node name="WeaponsBuildContainer" type="VBoxContainer" parent="CenterContainer/Panel/VBox/MainScroll/ContentVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="PassivesBuildContainer" type="VBoxContainer" parent="CenterContainer/Panel/VBox/MainScroll/ContentVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="OffersTitle" type="Label" parent="CenterContainer/Panel/VBox/MainScroll/ContentVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+modulate = Color(1, 0.85, 0.5, 1)
+text = "OFERTAS"
+
+[node name="OffersContainer" type="VBoxContainer" parent="CenterContainer/Panel/VBox/MainScroll/ContentVBox"]
+layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="ButtonsRow" type="HBoxContainer" parent="CenterContainer/Panel/VBox"]
@@ -73,13 +114,49 @@ theme_override_constants/separation = 12
 [node name="RerollButton" type="Button" parent="CenterContainer/Panel/VBox/ButtonsRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 68)
-theme_override_font_sizes/font_size = 20
+custom_minimum_size = Vector2(0, 64)
+theme_override_font_sizes/font_size = 18
 text = "REROLL (10)"
 
 [node name="ContinueButton" type="Button" parent="CenterContainer/Panel/VBox/ButtonsRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 68)
-theme_override_font_sizes/font_size = 20
+custom_minimum_size = Vector2(0, 64)
+theme_override_font_sizes/font_size = 18
 text = "CONTINUAR"
+
+[node name="FusionConfirm" type="CenterContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+
+[node name="Panel" type="PanelContainer" parent="FusionConfirm"]
+custom_minimum_size = Vector2(480, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_confirm")
+
+[node name="VBox" type="VBoxContainer" parent="FusionConfirm/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="FusionConfirm/Panel/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Fundir 2x Ruyi Jingu Bang Lv.1 em 1x Lv.2?"
+
+[node name="HBox" type="HBoxContainer" parent="FusionConfirm/Panel/VBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="CancelButton" type="Button" parent="FusionConfirm/Panel/VBox/HBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(160, 64)
+text = "CANCELAR"
+
+[node name="ConfirmButton" type="Button" parent="FusionConfirm/Panel/VBox/HBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(160, 64)
+text = "FUNDIR"

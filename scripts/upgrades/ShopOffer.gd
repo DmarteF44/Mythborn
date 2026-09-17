@@ -13,3 +13,6 @@ var price: int = 0
 var title: String = ""
 var description: String = ""
 var disabled_reason: String = ""
+
+## "COMPRAR" / "NOVA CÓPIA" (arma já possuída) / "ADQUIRIR" / "MELHORAR" (passiva).
+var action_label: String = "COMPRAR"

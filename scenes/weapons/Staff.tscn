@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/weapons/WeaponStaff.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/weapons/staff_data.tres" id="2"]
+[ext_resource type="Texture2D" path="res://assets/weapons/ruyi_jingu_bang.png" id="3"]
 
 [node name="Staff" type="Node2D"]
 script = ExtResource("1")
@@ -12,10 +13,8 @@ weapon_data = ExtResource("2")
 [node name="SwingVisual" type="Node2D" parent="."]
 visible = false
 
-[node name="Shape" type="Polygon2D" parent="SwingVisual"]
-polygon = PackedVector2Array(6, -4, 92, -4, 92, 4, 6, 4)
-color = Color(0.85, 0.65, 0.2, 1)
-
-[node name="Tip" type="Polygon2D" parent="SwingVisual"]
-polygon = PackedVector2Array(85, -9, 100, 0, 85, 9)
-color = Color(1, 0.85, 0.3, 1)
+[node name="Shape" type="Sprite2D" parent="SwingVisual"]
+position = Vector2(48, 0)
+scale = Vector2(1.4, 1.4)
+texture_filter = 1
+texture = ExtResource("3")

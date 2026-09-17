@@ -43,10 +43,24 @@ Esta etapa cobre a primeira implementação de referência de um personagem comp
 - Dados de cada arma (dano, cooldown, alcance, nome) ficam em um `Resource` (`WeaponData`), permitindo balancear ou criar variações sem alterar código.
 - Upgrades permanentes e de partida (dano, velocidade de ataque) afetam todas as armas do jogador via multiplicadores centralizados, não por arma individual.
 
-### Limite de 12 Armas
+### REGRA OFICIAL: Duplicatas e Fusão
 
-- O jogador pode carregar **no máximo 12 armas simultâneas**.
-- O inventário de armas (`WeaponInventory`) é a fonte única de verdade sobre quais armas estão equipadas, preparado desde já para adicionar, remover e futuramente evoluir armas. Ele também impede duplicar uma arma que o jogador já possui (`has_weapon`), seja comprando na loja ou recebendo de uma evolução de personagem.
+**Uma mesma arma pode existir em várias cópias.** Cada cópia é uma instância independente (seu próprio cooldown, seu próprio nível) e ocupa 1 dos **12 slots totais** — o limite é de **instâncias**, não de tipos diferentes de arma.
+
+Exemplo válido: `12x Ruyi Jingu Bang Lv.1` é uma build completa e legítima, `12/12`.
+
+Comprar uma arma que o jogador já tem **nunca** vira upgrade automático — é sempre uma cópia nova e independente. A única forma de uma cópia subir de nível é a **fusão**, uma ação **opcional e nunca automática**:
+
+- Exige **2 cópias da mesma arma, no mesmo nível** (`Ruyi Lv.1 + Ruyi Lv.1 → Ruyi Lv.2`). Não é possível fundir níveis diferentes nem armas diferentes.
+- É **gratuita** (não consome Essência).
+- Consome as 2 cópias e produz 1 cópia no nível seguinte — **libera 1 slot** (12 armas → 1 fusão → 11 armas).
+- O jogador decide se e quando fundir; pode manter todas as cópias separadas indefinidamente se preferir.
+
+Exemplo completo: com `12x Ruyi Lv.1` (12/12), o jogador funde uma vez → `10x Lv.1 + 1x Lv.2` (11/12) → compra uma arma nova → `10x Lv.1 + 1x Lv.2 + 1x Fagulha Divina` (12/12) → decide fundir mais duas `Lv.1` → `8x Lv.1 + 2x Lv.2 + 1x Fagulha` (11/12). Cada decisão é do jogador.
+
+### Nível das Armas
+
+Cada arma tem `current_level` e um `max_level` (padrão 5). O nível muda de verdade o dano, o cooldown e (opcionalmente) o alcance — os valores exatos de crescimento são configuráveis por arma. Ao atingir o nível máximo, a UI mostra **MAX** e a fusão para aquele nível deixa de ser oferecida — mas o jogador pode continuar tendo várias cópias no nível máximo.
 
 ### Armas Implementadas
 
@@ -54,7 +68,11 @@ Esta etapa cobre a primeira implementação de referência de um personagem comp
 - **Clones de Pelo**: poder característico de Wukong, desbloqueado ao evoluir para SUN WUKONG. Atinge até 2 inimigos próximos por ciclo — pequenos "ataques adicionais" simultâneos ao Bastão.
 - **Fagulha Divina**: arma de longo alcance à base de projétil, deliberadamente **sem vínculo com nenhuma mitologia específica** — prova de que a build de Wukong não fica presa a poderes chineses (ver seção "Personagem e Build" abaixo). Desbloqueada ao atingir SUN WUKONG DESPERTADO, ou comprável antes disso na loja.
 
-Todas as três podem coexistir no inventário, cada uma com seu próprio cooldown e alcance, todas usando o mesmo sistema de targeting.
+Todas podem coexistir no inventário em qualquer quantidade e nível, cada cópia com seu próprio cooldown e alcance, todas usando o mesmo sistema de targeting.
+
+### Pickup Magnet (Coleta de XP)
+
+O jogador tem um raio de coleta (padrão 80px, configurável). Uma gema de XP fora do raio fica parada; ao entrar no raio, ela acelera suavemente em direção ao jogador até ser coletada por contato — nunca teleporta. A passiva **Magnetismo** aumenta esse raio.
 
 ## 8. Experiência (XP)
 
@@ -87,20 +105,25 @@ Ao atingir um desses níveis, o jogo mostra uma tela de evolução simples (nome
 
 ## 11. Loja Unificada de Upgrades
 
-Ao subir de nível, a Loja de Upgrades reúne em uma única tela tudo que o jogador pode adquirir para a build da run:
+Ao subir de nível, a Loja de Upgrades reúne em uma única tela **duas partes**:
 
-- **Armas** (ex.: Fagulha Divina) — ocupam um slot do inventário (limite de 12).
-- **Poderes** (ex.: Clones de Pelo) — tecnicamente também armas, ocupam slot.
-- **Passivas** (ex.: +Dano, +Vida) — não ocupam slot, apenas ajustam multiplicadores do jogador.
+- **SUA BUILD**: um resumo compacto do que o jogador já tem — armas agrupadas por nome e nível (ex.: `Ruyi Jingu Bang Lv.1 × 5`), com um botão **FUNDIR** ao lado de qualquer grupo com 2+ cópias no mesmo nível (pede confirmação antes de aplicar); e passivas/poderes com seu nível atual.
+- **OFERTAS**: até 4 ofertas sorteadas — armas, passivas ou poderes, cada uma com categoria, descrição e preço em Essência.
 
-Cada oferta mostra categoria, nome, descrição e preço em Essência. Um botão **REROLL** gera um novo conjunto de ofertas por um custo crescente. O jogador pode comprar **múltiplas ofertas na mesma visita** (enquanto tiver Essência), e só fecha a loja manualmente pelo botão **CONTINUAR** — o jogo permanece pausado até lá.
+O jogador pode comprar **múltiplas ofertas na mesma visita** (enquanto tiver Essência) e fundir armas da build quantas vezes quiser, tudo na mesma tela rolável. Um botão **REROLL** gera um novo conjunto de ofertas por um custo crescente. Só fecha manualmente pelo botão **CONTINUAR** — o jogo permanece pausado até lá.
 
 A primeira compra de cada visita à loja é sempre gratuita (consome o "token" ganho ao subir de nível), então subir de nível nunca é frustrante mesmo com pouca Essência acumulada.
 
+### Comprar vs. Fundir — Nunca a Mesma Coisa
+
+- **Comprar uma arma** (nova ou já possuída) = sempre uma cópia nova e independente no nível 1. O botão mostra **NOVA CÓPIA** quando o jogador já tem aquela arma, só para deixar claro o que vai acontecer — nunca é rotulado como fusão.
+- **Fundir** = ação separada, feita na seção "Sua Build", nunca disparada por uma compra.
+- **Melhorar uma passiva** = comprar a mesma passiva de novo aumenta o nível dela (ex.: `Dano Lv.2 → Lv.3`) — passivas não têm cópias múltiplas, só 1 nível que sobe.
+
 ### Regras de Oferta
 
-- Uma arma que o jogador já possui nunca é oferecida novamente.
-- Se o inventário de armas já estiver no limite de 12, a oferta de arma aparece desabilitada com o motivo explicado ("Inventário de armas cheio"), nunca escondida sem explicação.
+- Armas **sempre podem ser oferecidas novamente**, mesmo já possuídas — duplicatas são o comportamento desejado. Só ficam desabilitadas (com o motivo explicado, ex. "Inventário de armas cheio") quando o inventário está no limite de 12; fundir uma arma existente libera espaço imediatamente para a oferta voltar a ficar disponível.
+- Uma passiva que já atingiu o nível máximo nunca é oferecida de novo (mostra **MAX** no resumo da build).
 - Nenhuma oferta repete o mesmo item na mesma tela.
 
 ## 12. Essência (Economia da Run)
@@ -112,10 +135,12 @@ A primeira compra de cada visita à loja é sempre gratuita (consome o "token" g
 
 ## 13. Passivas e Poderes de Wukong
 
-Passivas disponíveis nesta etapa (todas empilháveis, cada compra soma o efeito de novo):
+Diferente de armas, uma passiva **não tem múltiplas instâncias** — é sempre "1 passiva + 1 nível", com um `max_level` (padrão 3). Comprar a mesma passiva de novo sobe o nível; ao atingir o máximo, ela para de aparecer na loja.
 
-- **+Dano**, **+Velocidade de Ataque**, **+Velocidade de Movimento**, **+Vida Máxima**, **+XP Ganho**.
-- **Nuvem Ventania**: poder característico de Wukong, mecanicamente uma passiva de velocidade de movimento.
+Passivas disponíveis nesta etapa:
+
+- **Dano**, **Velocidade de Ataque**, **Velocidade**, **Vida Máxima**, **XP Ganho**, **Magnetismo** (raio de coleta de pickups).
+- **Nuvem Ventania**: poder característico de Wukong, mecanicamente uma passiva de velocidade de movimento (categoria "Poder" na loja, por ser a marca de Wukong).
 
 Um upgrade novo é apenas uma entrada de dados a mais — nenhuma dessas passivas exigiu tocar na tela de compra.
 
@@ -226,18 +251,22 @@ Dali, pode escolher **JOGAR NOVAMENTE** (inicia uma corrida nova e limpa) ou **M
 
 ## 24. Estatísticas da Partida
 
-Dados temporários da corrida atual (não persistem entre partidas) ficam centralizados e são reiniciados a cada nova run: tempo sobrevivido, inimigos derrotados, nível alcançado, upgrades escolhidos e armas possuídas.
+Dados temporários da corrida atual (não persistem entre partidas) ficam centralizados e são reiniciados a cada nova run: tempo sobrevivido, inimigos derrotados, nível alcançado, upgrades escolhidos, armas possuídas (incluindo duplicatas e níveis) e nível de cada passiva.
 
-## 25. Funcionalidades Planejadas para Etapas Futuras
+## 25. Assets Visuais Básicos
+
+Os placeholders geométricos (retângulos/polígonos coloridos) foram substituídos por sprites simples e originais, gerados via código (sem uso de assets de terceiros): o macaco Wukong, o bastão Ruyi Jingu Bang, o inimigo Grunt e a gema de XP. Ainda é um estilo de "protótipo polido", não arte final — mas já dá uma primeira identidade visual reconhecível. Ver `assets/` e `docs/ARCHITECTURE.md` para onde cada um fica.
+
+## 26. Funcionalidades Planejadas para Etapas Futuras
 
 - Novos personagens (Zeus, Hades, Thor, Anúbis...), reutilizando `CharacterData`/`CharacterProgression`.
 - Mais armas/poderes de outras mitologias na build de qualquer personagem.
-- Evolução de armas individuais (não apenas do personagem).
+- Evolução de arma além do nível máximo (ex.: Ruyi Jingu Bang Lv.5 + condição → "Ascended") — o nivelamento e a fusão em si já existem, só falta esse próximo estágio.
 - Novos tipos de inimigos e chefes.
 - Progressão narrativa completa.
 - Progressão permanente entre partidas (meta progression) e desbloqueio de personagens.
 - Relíquias (categoria já reservada na loja, sem conteúdo ainda).
-- Níveis reais de passivas (Power I/II/III) em vez de empilhar o mesmo bônus repetidamente.
+- Arte final substituindo os sprites básicos atuais.
 - Localidades e modos de jogo (Endless, Challenge, Boss Rush, Chaos).
 - Arte definitiva substituindo os placeholders.
 - Balanceamento e ajuste fino de dificuldade e economia de Essência.

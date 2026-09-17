@@ -3,10 +3,15 @@ extends Node2D
 
 ## Base de todas as armas: cooldown + busca de alvo. Comportamento do ataque
 ## em si é responsabilidade de cada subclasse via _perform_attack().
+##
+## Esta instância representa UMA cópia da arma — o jogador pode ter várias
+## cópias independentes da mesma WeaponData (ver WeaponInventory), cada uma
+## com seu próprio current_level, cooldown e alvo.
 
 @export var weapon_data: WeaponData
 
 var stats: PlayerStats = null
+var current_level: int = 1
 
 @onready var cooldown_timer: Timer = $CooldownTimer
 
@@ -17,14 +22,23 @@ func _ready() -> void:
 	_start_cooldown()
 
 
+## Usado pela fusão (WeaponInventory.fuse) para elevar o nível desta cópia.
+func set_level(level: int) -> void:
+	current_level = clampi(level, 1, weapon_data.max_level)
+
+
 func _get_effective_damage() -> float:
 	var mult := stats.get_damage_mult() if stats else 1.0
-	return weapon_data.damage * mult
+	return weapon_data.get_damage_for_level(current_level) * mult
 
 
 func _get_effective_cooldown() -> float:
 	var mult := stats.get_attack_speed_mult() if stats else 1.0
-	return weapon_data.cooldown / max(0.01, mult)
+	return weapon_data.get_cooldown_for_level(current_level) / max(0.01, mult)
+
+
+func _get_effective_range() -> float:
+	return weapon_data.get_range_for_level(current_level)
 
 
 func _start_cooldown() -> void:
@@ -33,7 +47,7 @@ func _start_cooldown() -> void:
 
 
 func _on_cooldown_timeout() -> void:
-	var target := TargetingUtils.get_closest_enemy(global_position, weapon_data.range)
+	var target := TargetingUtils.get_closest_enemy(global_position, _get_effective_range())
 	if target != null:
 		_perform_attack(target)
 	_start_cooldown()

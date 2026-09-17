@@ -43,6 +43,8 @@ scripts/
   player/Player.gd
   player/PlayerStats.gd
   player/PlayerExperience.gd
+  player/PlayerPassives.gd
+  player/PickupMagnet.gd
   weapons/WeaponData.gd
   weapons/Weapon.gd
   weapons/WeaponStaff.gd
@@ -79,6 +81,11 @@ resources/
   characters/wukong_stage_2_sun_wukong.tres
   characters/wukong_stage_3_awakened.tres
 default_bus_layout.tres     # Buses de áudio: Master, Music, SFX
+assets/
+  characters/wukong.png      # Sprite original, gerado por código (ver seção 12)
+  weapons/ruyi_jingu_bang.png
+  enemies/grunt.png
+  pickups/xp_gem.png
 ```
 
 ## 3. Autoloads (Singletons)
@@ -116,10 +123,12 @@ Acumula o papel de tela de Game Over e de Resultados (simplificação deliberada
 - `Health` (componente de vida/dano).
 - `PlayerStats` (multiplicadores separados por origem: `move_speed_mult`/`damage_mult`/`attack_speed_mult` vindos de upgrades da loja, somam; `character_*_mult` vindos da evolução do personagem, multiplicam. `get_move_speed()`/`get_damage_mult()`/`get_attack_speed_mult()` combinam os dois conjuntos — quem lê nunca precisa saber a origem).
 - `PlayerExperience` (XP, nível, `xp_gain_mult`, sinal `leveled_up`).
-- `WeaponInventory` (armas equipadas).
+- `WeaponInventory` (armas equipadas — aceita cópias/níveis duplicados, ver seção dedicada abaixo).
+- `PlayerPassives` (nível atual de cada passiva/poder-passivo por id — ver seção dedicada abaixo).
 - `CharacterProgression` (qual personagem, estágio de evolução atual — ver seção "Personagem" abaixo).
+- `PickupMagnet` (`Area2D`, raio = `PlayerStats.get_pickup_radius()`; ao detectar uma `XPGem` no raio, chama `start_attracting(player)` nela).
 - `Camera2D` (segue o jogador por ser filho direto).
-- `Visual` (placeholder colorido) + `CollisionShape2D`.
+- `Visual` (`Sprite2D` com o sprite de Wukong — ver seção "Assets Visuais") + `CollisionShape2D`.
 
 Em `_ready()`, `Player.gd` lê `progression.character_data` para definir vida/velocidade base e conceder a arma inicial — **nenhum dado de personagem fica hard-coded em `Player.gd`**, apenas a leitura genérica de `CharacterData`.
 
@@ -137,16 +146,26 @@ Sun Wukong (`resources/characters/wukong_data.tres`) tem 3 estágios: WUKONG (n�
 `Timer` que instancia inimigos em posições ao redor da arena em intervalos regulares. Recebe a cena do inimigo e o intervalo como parâmetros exportados — novos tipos de inimigo podem ser adicionados trocando/somando cenas aqui, sem alterar o spawner.
 
 ### Weapon / Armas concretas (`scripts/weapons/`)
-- `WeaponData` (Resource): dano, cooldown, alcance, nome, `price` e `shop_category` (para a loja) — dados puros. **Não guarda a cena que a representa** (evitaria uma referência circular com a própria cena que a carrega como `weapon_data`); esse mapeamento fica em `WeaponPool`.
-- `Weapon` (base, `Node2D`): possui um `Timer` de cooldown; a cada disparo do timer, usa `TargetingUtils` para achar o inimigo mais próximo dentro do alcance e, se houver, chama `_perform_attack(target)` (método virtual). Lê `PlayerStats.get_damage_mult()`/`get_attack_speed_mult()` para calcular dano/cooldown efetivos. Expõe `_flash_target(target)`, um feedback de acerto reutilizável (flash no `Visual` do alvo) que qualquer arma pode chamar.
+- `WeaponData` (Resource): dano/cooldown/alcance de **nível 1** (base), mais taxas de crescimento por nível (`max_level`, `damage_growth_per_level`, `cooldown_reduction_per_level`, `range_growth_per_level`) — `get_damage_for_level(n)`/`get_cooldown_for_level(n)`/`get_range_for_level(n)` derivam o valor real de cada nível a partir daí, então nenhum número de nível fica hard-coded fora do Resource. Também tem `price` e `shop_category` (para a loja) — dados puros. **Não guarda a cena que a representa** (evitaria uma referência circular com a própria cena que a carrega como `weapon_data`); esse mapeamento fica em `WeaponPool`.
+- `Weapon` (base, `Node2D`): representa **uma cópia individual** de uma arma, com seu próprio `current_level` (padrão 1) e `Timer` de cooldown independente. A cada disparo do timer, usa `TargetingUtils` para achar o inimigo mais próximo dentro do alcance efetivo do nível atual e, se houver, chama `_perform_attack(target)` (método virtual). `set_level(n)` (usado pela fusão) troca o nível; `_get_effective_damage()`/`_get_effective_cooldown()`/`_get_effective_range()` combinam o nível atual com os multiplicadores de `PlayerStats`. Expõe `_flash_target(target)`, um feedback de acerto reutilizável (flash no `Visual` do alvo) que qualquer arma pode chamar.
 - `WeaponStaff` (Ruyi Jingu Bang): golpe corpo a corpo — dano direto no alvo, arco de swing visível (`SwingVisual` gira entre dois ângulos e desaparece) e flash de impacto.
 - `WeaponHairClones` (Clones de Pelo): usa `TargetingUtils.get_enemies_in_range(pos, range, 2)` para atingir até 2 alvos por ciclo, cada um com seu próprio flash — prova de arma com efeito em múltiplos alvos sem precisar de uma base nova.
 - `WeaponSpark` (Fagulha Divina) + `Projectile`: arma de longo alcance que instancia um `Projectile` (Area2D simples, velocidade fixa em linha reta, dano ao colidir com o grupo `enemies`) mirado na posição do alvo no instante do disparo.
 
 Novas armas = novo script estendendo `Weapon` + novo `WeaponData`. Armas com comportamento diferente (multi-alvo, projétil, área, etc.) sobrescrevem apenas `_perform_attack`.
 
-### WeaponInventory (`weapons/WeaponInventory.gd`, filho do Player)
-Lista de armas equipadas (máx. `GameManager.MAX_WEAPONS = 12`). Expõe `add_weapon(scene)` que instancia a arma, **recusa duplicar uma arma que o jogador já possui** (`has_weapon(id)` — instancia, verifica o id, libera e retorna `null` se já existir), injeta a referência ao `PlayerStats` do dono e adiciona à lista, respeitando o limite. Fonte única de verdade sobre "quais armas o jogador tem" — tanto a `UpgradeOfferGenerator` quanto a evolução de personagem consultam este nó antes de oferecer/conceder algo, nunca contam filhos manualmente.
+### WeaponInventory (`weapons/WeaponInventory.gd`, filho do Player) — Duplicatas e Fusão
+Lista de **instâncias** de arma equipadas (máx. `GameManager.MAX_WEAPONS = 12` — o limite é de instâncias, não de tipos diferentes). `add_weapon(scene)` **sempre** cria uma cópia nova e independente (nível 1), mesmo que o jogador já tenha aquela arma — duplicatas são o comportamento correto, nunca bloqueadas. `has_weapon(id)` continua existindo, mas só para fins de exibição ("nova cópia" vs "comprar" na loja), nunca para impedir uma aquisição.
+
+`get_grouped_weapons()` agrupa as instâncias por `(id, nível)` — é o que a `UpgradeShop`/HUD usam para mostrar "Ruyi Lv.1 × 5" em vez de 5 cards repetidos.
+
+`fuse(weapon_id, level)` é a **única** forma de uma arma subir de nível: exige 2 cópias daquele id **no mesmo nível**, é sempre uma escolha explícita do jogador (nunca automática ao comprar/receber uma duplicata), não custa Essência, e reaproveita a instância "sobrevivente" (só chama `set_level()` nela) em vez de destruir e recriar — a outra cópia é removida (`erase` + `queue_free`). Falha (retorna `false`) se não houver 2 cópias no nível pedido ou se já estiver no `max_level` daquela arma.
+
+### PlayerPassives (`player/PlayerPassives.gd`, filho do Player) — Passivas com Nível
+Diferente de armas: uma passiva **não tem instâncias múltiplas**, apenas um nível (`Dictionary` id → nível atual, limitado por `UpgradeData.max_level`). `apply(upgrade)` incrementa o nível e despacha o efeito pelo tipo: `VITALITY` chama `Health.apply_max_health_multiplier()`, `XP_GAIN` soma em `PlayerExperience.xp_gain_mult`, `PICKUP_RADIUS` soma em `PlayerStats.pickup_radius_bonus` e atualiza o raio real do `PickupMagnet`, e os demais tipos (`DAMAGE`/`ATTACK_SPEED`/`MOVE_SPEED`) continuam indo por `PlayerStats.apply_upgrade()` como antes. Comprar a mesma passiva de novo **melhora o nível existente**, nunca cria uma segunda entrada.
+
+### PickupMagnet + XPGem — Pickup com Ímã
+`PickupMagnet` é uma `Area2D` filha do Player cujo raio (`CollisionShape2D`/`CircleShape2D`) é definido por `PlayerStats.get_pickup_radius()`. Ao detectar uma `XPGem` (via `area_entered`, já que XPGem também é `Area2D`), chama `start_attracting(player)` nela. `XPGem` tem um estado (`IDLE` → `ATTRACTING` → `COLLECTED`): parada até ser notificada, depois acelera suavemente (`attract_acceleration` até `attract_speed`) em direção ao alvo a cada `_physics_process`, e é coletada normalmente por `body_entered` quando encosta no jogador — nunca teleporta, nunca dispara XP duas vezes (guarda de estado `COLLECTED`).
 
 ### Sistema de Targeting (`targeting/TargetingUtils.gd`)
 Classe utilitária com função estática `get_closest_enemy(from_position, max_range)`, que varre `get_tree().get_nodes_in_group("enemies")` e retorna o mais próximo dentro do alcance (ou `null`). É a única implementação de busca de alvo do jogo; todas as armas (atuais e futuras) a reutilizam — nenhuma arma implementa sua própria busca.
@@ -159,12 +178,12 @@ Componente reutilizável (`Node`) com `max_health`, `current_health`, sinais `he
 
 ### Loja Unificada de Upgrades (`upgrades/`, `ui/UpgradeShop.gd`, `ui/EvolutionScreen.gd`)
 - `ShopCategory` (classe utilitária): apenas o enum `Type { WEAPON, PASSIVE, POWER }`, compartilhado por `WeaponData` e `UpgradeData` para que a loja trate os dois tipos de dado de forma uniforme.
-- `UpgradeData` (Resource): id, título, descrição, tipo de efeito (`DAMAGE`/`ATTACK_SPEED`/`MOVE_SPEED`/`VITALITY`/`XP_GAIN`), valor, `price` e `shop_category`.
+- `UpgradeData` (Resource): id, título (level-agnostic, ex. "DANO" — nunca "+20% DANO"), descrição, tipo de efeito (`DAMAGE`/`ATTACK_SPEED`/`MOVE_SPEED`/`VITALITY`/`XP_GAIN`/`PICKUP_RADIUS`), `value` (incremento POR NÍVEL), `max_level`, `price` e `shop_category`.
 - `UpgradePool` (autoload): catálogo de passivas (e poderes-passiva, como a Nuvem Ventania de Wukong, que é uma passiva de velocidade rotulada como `POWER`).
 - `WeaponPool` (autoload): catálogo de `{data: WeaponData, scene: PackedScene}` — armas/poderes que ocupam slot no inventário.
-- `ShopOffer` (classe simples, não persistida): uma oferta pronta para exibição/compra — categoria, dados (arma ou upgrade), preço, título, descrição e um `disabled_reason` opcional.
-- `UpgradeOfferGenerator` (classe utilitária estática): **o único lugar que decide o que pode ser oferecido**. Junta candidatos de `Weapons.pool` (menos os já possuídos pelo jogador) e de `Upgrades.pool`, embaralha e retorna N ofertas. Se o inventário de armas estiver cheio, a oferta de arma continua aparecendo, mas com `disabled_reason` preenchido — nunca escondida sem explicação.
-- `UpgradeShop` (`CanvasLayer`, `process_mode = ALWAYS`): a UI apenas chama `UpgradeOfferGenerator.generate_offers()` e desenha o que recebe (cartões montados em código, não em uma cena separada por oferta). Compra: se houver "token" grátis (`Economy.has_free_token()`), consome o token; senão, gasta `Economy`. Aplica o efeito (`weapon_inventory.add_weapon()` para armas/poderes, ou um `match` local para os tipos de `UpgradeData` que não são multiplicadores simples de `PlayerStats`, como `VITALITY`/`XP_GAIN`) e remove a oferta da lista — permitindo múltiplas compras na mesma visita, sem gerar um novo conjunto a cada compra. **REROLL** gasta `Economy.get_reroll_cost(n)` (cresce a cada uso) e gera um conjunto novo. Fecha só pelo botão CONTINUAR, emitindo `closed`.
+- `ShopOffer` (classe simples, não persistida): uma oferta pronta para exibição/compra — categoria, dados (arma ou upgrade), preço, título, descrição, `action_label` ("COMPRAR"/"NOVA CÓPIA"/"ADQUIRIR"/"MELHORAR") e um `disabled_reason` opcional.
+- `UpgradeOfferGenerator` (classe utilitária estática): **o único lugar que decide o que pode ser oferecido**. Armas de `Weapons.pool` são **sempre** candidatas, mesmo já possuídas (duplicatas são o comportamento desejado) — só ganham `disabled_reason` se o inventário estiver cheio. Passivas de `Upgrades.pool` só entram se `player.passives.can_upgrade()` for verdadeiro (não maxadas); a descrição já mostra "Nível N → N+1" com os percentuais calculados via `format_value()`.
+- `UpgradeShop` (`CanvasLayer`, `process_mode = ALWAYS`): tela rolável com duas partes. **Sua Build**: `_render_build_summary()` lê `weapon_inventory.get_grouped_weapons()` e `passives.levels` para montar as linhas, com um botão **FUNDIR** por grupo de arma com 2+ cópias (abre um painel de confirmação `FusionConfirm` antes de chamar `weapon_inventory.fuse()`). **Ofertas**: `UpgradeOfferGenerator.generate_offers()` e cartões montados em código (não uma cena por oferta). Compra: se houver "token" grátis (`Economy.has_free_token()`), consome o token; senão, gasta `Economy`. Aplica o efeito (`weapon_inventory.add_weapon()` para armas/poderes, `player.passives.apply()` para passivas — a lógica de "qual campo de `PlayerStats`/`Health`/etc. cada tipo afeta" mora em `PlayerPassives`, não na UI) e remove a oferta da lista, permitindo múltiplas compras na mesma visita sem gerar um novo conjunto a cada compra. **REROLL** gasta `Economy.get_reroll_cost(n)` (cresce a cada uso) e gera um conjunto novo. Fecha só pelo botão CONTINUAR, emitindo `closed`.
 - `EvolutionScreen` (`CanvasLayer`, `process_mode = ALWAYS`): mostra nome antigo → novo, bônus formatados a partir dos multiplicadores de `CharacterEvolutionData`, e o poder desbloqueado (se houver). Emite `continued` ao fechar.
 
 Adicionar uma passiva nova = uma entrada em `UpgradePool`. Adicionar uma arma/poder novo = uma entrada em `WeaponPool` (mais o script/cena da própria arma). Nenhum dos dois exige tocar na `UpgradeShop`.
@@ -201,9 +220,9 @@ Isso garante que **nunca duas telas de pausa apareçam ao mesmo tempo**: evoluç
 
 ## 7. Como Armas São Adicionadas
 
-1. Criar um `WeaponData` (`.tres`) com dano/cooldown/alcance/nome.
+1. Criar um `WeaponData` (`.tres`) com dano/cooldown/alcance de nível 1, taxas de crescimento por nível e `max_level`.
 2. Criar uma cena de arma com um script estendendo `Weapon`, implementando `_perform_attack(target)` conforme o comportamento desejado (melee, projétil, área...).
-3. Registrar a cena em `WeaponInventory.add_weapon(scene)` (respeitando o limite de 12).
+3. Adicionar `{data, scene}` em `WeaponPool.pool` para que apareça na loja. `WeaponInventory.add_weapon(scene)` sempre cria uma cópia nova (respeitando o limite de 12 instâncias) — duplicatas de uma mesma arma nunca precisam de tratamento especial.
 
 ## 8. Como Inimigos São Adicionados
 
@@ -213,15 +232,15 @@ Isso garante que **nunca duas telas de pausa apareçam ao mesmo tempo**: evoluç
 
 ## 9. Como Upgrades/Passivas São Adicionados
 
-1. Criar uma entrada `UpgradeData` (id, título, descrição, tipo, valor) em `UpgradePool`.
-2. Garantir que `PlayerStats` (ou o ponto de aplicação do upgrade) saiba tratar o tipo — tipos já existentes (`DAMAGE`, `ATTACK_SPEED`, `MOVE_SPEED`) não requerem nenhuma alteração de código.
+1. Criar uma entrada `UpgradeData` (id, título level-agnostic, descrição, tipo, `value` por nível, `max_level`) em `UpgradePool`.
+2. Garantir que `PlayerPassives.apply()` saiba tratar o tipo — tipos já existentes (`DAMAGE`, `ATTACK_SPEED`, `MOVE_SPEED`, `VITALITY`, `XP_GAIN`, `PICKUP_RADIUS`) não requerem nenhuma alteração de código.
 
 ## 10. Como o Sistema Pode Crescer
 
 - **Novos personagens**: um novo `CharacterData` + seus `CharacterEvolutionData` (Zeus, Hades, Thor, Anúbis...). `CharacterProgression` já é genérico — nenhuma alteração de código é necessária, só apontar `Player.tscn`/uma futura tela de seleção para o `.tres` do personagem escolhido.
 - **Relíquias**: `ShopCategory.Type` já reserva espaço conceitual; adicionar `RELIC` ao enum e um `RelicData`/`RelicPool` segue o mesmo padrão de `WeaponPool`/`UpgradePool`.
-- **Níveis reais de passiva** (Power I/II/III): hoje cada compra da mesma passiva apenas soma o mesmo `value` de novo; para níveis de verdade, `UpgradeData` ganharia um `level` e a `UpgradeOfferGenerator` ofereceria o próximo nível em vez de duplicar a entrada base.
-- **Melhorar arma existente** (em vez de só adquirir novas): a loja hoje só oferece armas que o jogador ainda não tem; para "evoluir" uma arma possuída, `WeaponInventory` precisaria de um método `upgrade_weapon(id)` que a `UpgradeOfferGenerator` passaria a oferecer no lugar de "arma nova" quando já possuída.
+- **Evolução de arma além do nível máximo** (ex.: Ruyi Jingu Bang Lv.5 + condição → "Ascended"): `WeaponData` ganharia um campo `evolution_scene`/`evolution_condition`; `WeaponInventory.fuse()` já centraliza "o que acontece ao juntar 2 cópias", então essa evolução seria só mais um caso ali quando `level == max_level`.
+- **Melhorar arma existente via compra direta** (sem precisar de uma segunda cópia): hoje a única forma de subir o nível de uma arma é a fusão voluntária de 2 cópias iguais; um "upgrade direto" pago em Essência seria um método adicional em `WeaponInventory`, opcional e sem afetar a fusão.
 - **Poderes mitológicos de outros panteões**: novas entradas em `WeaponPool`/`UpgradePool`, exatamente como Clones de Pelo e Fagulha Divina foram adicionados — nenhuma delas exigiu tocar na `UpgradeShop`.
 - **Chefes**: nova cena estendendo o mesmo padrão de `Enemy` (Health, grupo `enemies`), com script próprio para padrões de ataque — o targeting e o dano já funcionam sem alteração.
 - **Progressão permanente**: um autoload adicional (`MetaProgress`) pode persistir dados entre partidas (ex.: salvar em arquivo, no mesmo padrão de `ConfigFile` já usado por `Settings`) e aplicar bônus iniciais ao `PlayerStats`/desbloquear personagens (`CharacterUnlockData`) na criação do jogador.
@@ -229,11 +248,20 @@ Isso garante que **nunca duas telas de pausa apareçam ao mesmo tempo**: evoluç
 - **Tela de preparação**: pode ser inserida entre o Menu Principal e a partida como um novo estado (`PRE_GAME`) e uma nova cena, sem alterar o resto do fluxo — `MainMenu` chamaria essa cena em vez de `GameManager.start_new_run()` diretamente, e ela decidiria quando de fato iniciar a run.
 - **Coleção / Progressão / Conquistas**: os botões desabilitados já reservados no Menu Principal podem virar cenas próprias, seguindo o mesmo padrão de `PauseMenu`/`SettingsMenu` (CanvasLayer independente, sem lógica de UI dentro do GameManager).
 
-## 11. Limitações Conhecidas
+## 12. Assets Visuais (Etapa 5)
+
+Os placeholders geométricos (`Polygon2D`) do jogador, do bastão, do inimigo e da gema de XP foram substituídos por sprites (`Sprite2D`) simples e originais, em `assets/`. Eles foram **gerados por código** (script Python com Pillow, formas básicas desenhadas programaticamente — círculos, elipses, polígonos), não copiados de nenhum jogo ou banco de assets, evitando qualquer questão de licenciamento.
+
+Cada substituição manteve o nome do nó `Visual` e o tipo `CanvasItem` (`Polygon2D` → `Sprite2D`, ambos têm `.modulate`), então **nenhum script precisou mudar** — `Weapon._flash_target()`, `Player.gd` e `Enemy.gd` continuam funcionando exatamente como antes, só o que é desenhado mudou. `texture_filter = NEAREST` é usado em cada `Sprite2D` para manter a estética de pixel art nítida mesmo com o `stretch/mode = canvas_items` do projeto.
+
+O bastão (`SwingVisual` em `Staff.tscn`) trocou dois `Polygon2D` (cabo + ponta) por um único `Sprite2D` do ícone `ruyi_jingu_bang.png`, mantendo a mesma animação de arco de swing controlada por `WeaponStaff.gd` (rotação do nó pai, não da sprite em si).
+
+## 13. Limitações Conhecidas
 
 - Botão físico "voltar" do Android ainda não é interceptado — hoje isso é papel do `ui_cancel` (Esc), que só está mapeado dentro da partida para abrir o Pause. Tratar o botão de voltar do sistema operacional fica para uma etapa futura de polimento mobile.
 - Não há tela de preparação (`PRE_GAME`) entre o Menu e a partida — por decisão de escopo (ver `docs/GAMEPLAY.md`), o botão JOGAR inicia a run diretamente.
-- Passivas não têm níveis reais (Power I/II/III): comprar a mesma passiva duas vezes apenas soma o mesmo bônus de novo, em vez de progredir por níveis nomeados.
-- A loja só oferece armas que o jogador ainda não possui — não existe ainda "melhorar uma arma já equipada" (ver seção 10).
+- A loja não oferece "melhorar uma arma já equipada" além da fusão voluntária de 2 cópias iguais (ver seção 10) — não existe upgrade direto pago em Essência.
 - Categoria `RELIC` mencionada no desenho geral do sistema de ofertas ainda não existe no `ShopCategory.Type` nem tem conteúdo — fica reservada para uma etapa futura.
-- Se dois estágios de evolução forem cruzados numa única chamada de `add_xp()` (XP muito acima do necessário de uma vez, o que não acontece em jogo normal, só forçando via debug), apenas a última evolução atingida é mostrada na `EvolutionScreen`, embora os bônus de todas sejam aplicados corretamente.
+- Evolução de arma além do `max_level` (ex.: "Ascended") ainda não existe — a arquitetura permite (ver seção 10), mas não foi implementada nesta etapa.
+- Se dois estágios de evolução de personagem forem cruzados numa única chamada de `add_xp()` (XP muito acima do necessário de uma vez, o que não acontece em jogo normal, só forçando via debug), apenas a última evolução atingida é mostrada na `EvolutionScreen`, embora os bônus de todas sejam aplicados corretamente.
+- Os sprites são deliberadamente simples (poucas cores, sem animação) — servem para dar identidade visual básica, não são arte final.
