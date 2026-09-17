@@ -7,13 +7,19 @@ config_version=5
 [application]
 
 config/name="Mythborn"
-run/main_scene="res://scenes/main/Main.tscn"
+run/main_scene="res://scenes/main/MainMenu.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 
 [autoload]
 
 GameManager="*res://scripts/core/GameManager.gd"
+RunStats="*res://scripts/core/RunStats.gd"
+Settings="*res://scripts/core/Settings.gd"
 Upgrades="*res://scripts/upgrades/UpgradePool.gd"
+
+[audio]
+
+buses/default_bus_layout="res://default_bus_layout.tres"
 
 [input]
 

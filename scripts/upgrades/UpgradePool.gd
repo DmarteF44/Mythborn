@@ -8,9 +8,9 @@ var pool: Array[UpgradeData] = []
 
 func _ready() -> void:
 	pool = [
-		_make("damage", "+Dano", "Aumenta o dano de todas as armas em 20%.", UpgradeData.Type.DAMAGE, 0.2),
-		_make("attack_speed", "+Velocidade de Ataque", "Aumenta a velocidade de ataque de todas as armas em 15%.", UpgradeData.Type.ATTACK_SPEED, 0.15),
-		_make("move_speed", "+Velocidade de Movimento", "Aumenta a velocidade de movimento em 10%.", UpgradeData.Type.MOVE_SPEED, 0.1),
+		_make("damage", "+20% DANO", "Aumenta o dano de todas as armas em 20%.", UpgradeData.Type.DAMAGE, 0.2),
+		_make("attack_speed", "+15% VELOCIDADE DE ATAQUE", "Reduz o intervalo entre ataques em 15%.", UpgradeData.Type.ATTACK_SPEED, 0.15),
+		_make("move_speed", "+10% VELOCIDADE", "Aumenta a velocidade de movimento em 10%.", UpgradeData.Type.MOVE_SPEED, 0.1),
 	]
 
 

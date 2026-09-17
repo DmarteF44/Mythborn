@@ -1,10 +1,22 @@
 class_name HUD
 extends CanvasLayer
 
-@onready var health_bar: ProgressBar = $Margin/VBox/HealthBar
-@onready var xp_bar: ProgressBar = $Margin/VBox/XPBar
-@onready var level_label: Label = $Margin/VBox/LevelLabel
-@onready var weapon_label: Label = $Margin/VBox/WeaponLabel
+signal pause_requested
+
+@onready var health_bar: ProgressBar = $TopBar/HBox/StatsVBox/HealthBar
+@onready var xp_bar: ProgressBar = $TopBar/HBox/StatsVBox/XPBar
+@onready var level_label: Label = $TopBar/HBox/StatsVBox/InfoRow/LevelLabel
+@onready var timer_label: Label = $TopBar/HBox/StatsVBox/InfoRow/TimerLabel
+@onready var weapon_label: Label = $TopBar/HBox/StatsVBox/WeaponLabel
+@onready var pause_button: Button = $TopBar/HBox/PauseButton
+
+
+func _ready() -> void:
+	pause_button.pressed.connect(func() -> void: pause_requested.emit())
+
+
+func _process(_delta: float) -> void:
+	timer_label.text = RunStats.format_time(RunStats.survival_time)
 
 
 func bind_to_player(player: Player) -> void:

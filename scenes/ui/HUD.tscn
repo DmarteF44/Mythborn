@@ -5,33 +5,57 @@
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1")
 
-[node name="Margin" type="MarginContainer" parent="."]
-offset_right = 300.0
-offset_bottom = 120.0
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
+[node name="TopBar" type="MarginContainer" parent="."]
+anchor_right = 1.0
+offset_bottom = 170.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 12
 
-[node name="VBox" type="VBoxContainer" parent="Margin"]
+[node name="HBox" type="HBoxContainer" parent="TopBar"]
 layout_mode = 2
+theme_override_constants/separation = 16
 
-[node name="HealthBar" type="ProgressBar" parent="Margin/VBox"]
+[node name="StatsVBox" type="VBoxContainer" parent="TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="HealthBar" type="ProgressBar" parent="TopBar/HBox/StatsVBox"]
 layout_mode = 2
 max_value = 30.0
 value = 30.0
 show_percentage = false
 
-[node name="XPBar" type="ProgressBar" parent="Margin/VBox"]
+[node name="XPBar" type="ProgressBar" parent="TopBar/HBox/StatsVBox"]
 layout_mode = 2
 max_value = 10.0
 value = 0.0
 show_percentage = false
 
-[node name="LevelLabel" type="Label" parent="Margin/VBox"]
+[node name="InfoRow" type="HBoxContainer" parent="TopBar/HBox/StatsVBox"]
 layout_mode = 2
+
+[node name="LevelLabel" type="Label" parent="TopBar/HBox/StatsVBox/InfoRow"]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "Nível 1"
 
-[node name="WeaponLabel" type="Label" parent="Margin/VBox"]
+[node name="TimerLabel" type="Label" parent="TopBar/HBox/StatsVBox/InfoRow"]
 layout_mode = 2
+horizontal_alignment = 2
+text = "00:00"
+
+[node name="WeaponLabel" type="Label" parent="TopBar/HBox/StatsVBox"]
+layout_mode = 2
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 14
 text = "Armas (0/12):"
+
+[node name="PauseButton" type="Button" parent="TopBar/HBox"]
+layout_mode = 2
+size_flags_vertical = 0
+custom_minimum_size = Vector2(64, 64)
+theme_override_font_sizes/font_size = 26
+text = "II"

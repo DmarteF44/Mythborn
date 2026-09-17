@@ -9,9 +9,13 @@ extends CharacterBody2D
 @onready var weapon_inventory: WeaponInventory = $WeaponInventory
 
 
+var _last_health: float = -1.0
+
+
 func _ready() -> void:
 	add_to_group("player")
 	health.died.connect(_on_died)
+	health.health_changed.connect(_on_health_changed)
 	for weapon_scene in starting_weapons:
 		weapon_inventory.add_weapon(weapon_scene)
 
@@ -24,6 +28,12 @@ func _physics_process(_delta: float) -> void:
 
 	velocity = input_vector * stats.get_move_speed()
 	move_and_slide()
+
+
+func _on_health_changed(current: float, _max_value: float) -> void:
+	if _last_health >= 0.0 and current < _last_health:
+		Settings.trigger_haptic()
+	_last_health = current
 
 
 func _on_died() -> void:

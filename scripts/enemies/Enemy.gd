@@ -58,6 +58,7 @@ func _deal_contact_damage() -> void:
 
 
 func _on_died() -> void:
+	RunStats.register_kill()
 	_spawn_xp_gem()
 	queue_free()
 

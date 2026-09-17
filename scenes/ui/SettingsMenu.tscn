@@ -1,0 +1,90 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/SettingsMenu.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.08, 0.08, 0.1, 0.95)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+content_margin_left = 32.0
+content_margin_top = 32.0
+content_margin_right = 32.0
+content_margin_bottom = 32.0
+
+[node name="SettingsMenu" type="CanvasLayer"]
+process_mode = 3
+script = ExtResource("1")
+
+[node name="Dim" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.55)
+
+[node name="Panel" type="CenterContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Background" type="PanelContainer" parent="Panel"]
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Background"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="Panel/Background/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 36
+text = "Configurações"
+
+[node name="SoundRow" type="HBoxContainer" parent="Panel/Background/VBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/Background/VBox/SoundRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Som"
+
+[node name="SoundButton" type="Button" parent="Panel/Background/VBox/SoundRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 56)
+text = "ON"
+
+[node name="MusicRow" type="HBoxContainer" parent="Panel/Background/VBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/Background/VBox/MusicRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Música"
+
+[node name="MusicButton" type="Button" parent="Panel/Background/VBox/MusicRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 56)
+text = "ON"
+
+[node name="VibrationRow" type="HBoxContainer" parent="Panel/Background/VBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/Background/VBox/VibrationRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Vibração"
+
+[node name="VibrationButton" type="Button" parent="Panel/Background/VBox/VibrationRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 56)
+text = "ON"
+
+[node name="BackButton" type="Button" parent="Panel/Background/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 64)
+theme_override_font_sizes/font_size = 24
+text = "VOLTAR"

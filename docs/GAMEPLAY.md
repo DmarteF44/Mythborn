@@ -15,9 +15,9 @@ Esta etapa cobre apenas o **protótipo jogável**: validar o núcleo de gameplay
 
 ## 3. Controles
 
-- Movimento: **WASD** (8 direções).
+- Movimento: **WASD**, ou joystick virtual (toque ou mouse) — 8 direções.
 - Sem mira manual: ataques são automáticos.
-- Navegação em menus/upgrades: mouse (clique nos botões de melhoria).
+- Navegação em menus (Menu Principal, Level Up, Pause, Configurações, Game Over): mouse ou toque, todos os botões respondem a ambos.
 
 ## 4. Movimento
 
@@ -111,9 +111,72 @@ Incluído nesta etapa:
 - Sistema de vida e dano (jogador e inimigos).
 - Sistema de XP e level-up com 3 escolhas de melhoria.
 - Inventário de armas preparado para até 12 armas.
-- Interface mínima (vida, XP, nível, arma atual, tela de level-up).
+- Interface mínima (vida, XP, nível, timer, arma atual, tela de level-up).
+- Estrutura completa de navegação: Menu Principal, Pause (com Configurações e saída confirmada), Game Over com resultados da corrida, e reinício limpo da partida.
 
-## 16. Funcionalidades Planejadas para Etapas Futuras
+## 16. Fluxo Global do Jogo
+
+O jogo agora tem uma estrutura de navegação completa, não apenas a arena:
+
+```
+MENU PRINCIPAL
+   ↓ (JOGAR)
+PARTIDA (PLAYING)
+   ↓ (subir de nível)          ↓ (botão de pause)
+LEVEL UP  ──────────────→  PAUSE
+   ↓ (escolher melhoria)       ↓ (continuar)
+PARTIDA (PLAYING)  ←───────────┘
+   ↓ (morte do jogador)
+GAME OVER / RESULTADOS
+   ↓                    ↓
+JOGAR NOVAMENTE     MENU PRINCIPAL
+```
+
+Estados possíveis (`GameManager.State`): `MAIN_MENU`, `PLAYING`, `LEVEL_UP`, `PAUSED`, `GAME_OVER`. Level Up e Pause são duas pausas conceitualmente diferentes (uma automática por progressão, outra manual pedida pelo jogador), mas ambas usam o mesmo mecanismo de pausa da engine e o mesmo caminho de retorno (`resume_gameplay()`).
+
+## 17. Menu Principal
+
+Tela inicial do jogo (`MainMenu.tscn`), com:
+
+- Título "MYTHBORN".
+- Botão **JOGAR** — inicia uma partida nova e completamente limpa.
+- Botão **CONFIGURAÇÕES** — abre o painel de configurações por cima do menu.
+- Uma fileira de botões desabilitados ("Coleção", "Progressão", "Conquistas") reservando espaço visual para funcionalidades futuras — não fazem nada nesta etapa.
+
+## 18. Pause
+
+Acessível durante a partida por um botão discreto no canto superior direito do HUD. Ao pausar:
+
+- todo o gameplay congela (inimigos, timer, ataques, movimentação, ganho de XP) — o mesmo mecanismo de pausa usado no Level Up;
+- é exibido um painel com **CONTINUAR**, **CONFIGURAÇÕES** e **SAIR DA PARTIDA**;
+- **SAIR DA PARTIDA** pede confirmação antes de descartar a corrida atual e voltar ao Menu Principal — o jogador nunca sai de uma partida ativa sem confirmar.
+
+## 19. Configurações
+
+Painel reutilizável (mesma cena instanciada no Menu Principal e no Pause), com três opções realmente funcionais:
+
+- **Som**: muta/desmuta o bus de áudio `SFX`.
+- **Música**: muta/desmuta o bus de áudio `Music`.
+- **Vibração**: liga/desliga o disparo de vibração do aparelho (usado hoje como feedback ao tomar dano).
+
+As preferências são salvas em `user://settings.cfg` e persistem entre sessões.
+
+## 20. Game Over e Resultados
+
+Ao morrer, o jogador vê imediatamente a tela de Game Over com o resultado da corrida:
+
+- tempo sobrevivido;
+- nível alcançado;
+- inimigos derrotados;
+- upgrades escolhidos.
+
+Dali, pode escolher **JOGAR NOVAMENTE** (inicia uma corrida nova e limpa) ou **MENU PRINCIPAL**.
+
+## 21. Estatísticas da Partida
+
+Dados temporários da corrida atual (não persistem entre partidas) ficam centralizados e são reiniciados a cada nova run: tempo sobrevivido, inimigos derrotados, nível alcançado, upgrades escolhidos e armas possuídas.
+
+## 22. Funcionalidades Planejadas para Etapas Futuras
 
 - Múltiplas armas simultâneas até o limite de 12.
 - Evolução de armas.
