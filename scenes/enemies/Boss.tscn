@@ -1,0 +1,43 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/BossEnemy.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/bosses/bull_demon_king_data.tres" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/XPGem.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/combat/Health.gd" id="4"]
+[ext_resource type="Texture2D" path="res://assets/enemies/grunt.png" id="5"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 28.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_contact"]
+radius = 34.0
+
+[node name="Boss" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1")
+boss_data = ExtResource("2")
+xp_gem_scene = ExtResource("3")
+
+[node name="Visual" type="Sprite2D" parent="."]
+texture_filter = 1
+scale = Vector2(2.6, 2.6)
+modulate = Color(0.6, 0.35, 0.85, 1)
+texture = ExtResource("5")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_body")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("4")
+
+[node name="ContactArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ContactArea"]
+shape = SubResource("CircleShape2D_contact")
+
+[node name="ContactTimer" type="Timer" parent="ContactArea"]
+wait_time = 0.5

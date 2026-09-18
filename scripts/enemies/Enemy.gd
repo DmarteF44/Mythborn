@@ -9,13 +9,23 @@ extends CharacterBody2D
 @onready var contact_timer: Timer = $ContactArea/ContactTimer
 
 var _player_in_contact: Node2D = null
+var _damage_mult: float = 1.0
+var _speed_mult: float = 1.0
+var _xp_mult: float = 1.0
+var _reward_mult: float = 1.0
 
 
 func _ready() -> void:
 	add_to_group("enemies")
 
-	health.max_health = enemy_data.max_health
-	health.current_health = enemy_data.max_health
+	var difficulty := DifficultyDirector.get_modifier()
+	_damage_mult = difficulty.damage_multiplier
+	_speed_mult = difficulty.speed_multiplier
+	_xp_mult = difficulty.xp_multiplier
+	_reward_mult = difficulty.reward_multiplier
+
+	health.max_health = enemy_data.max_health * difficulty.health_multiplier
+	health.current_health = health.max_health
 	health.died.connect(_on_died)
 
 	contact_area.body_entered.connect(_on_contact_body_entered)
@@ -26,7 +36,7 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	var player := TargetingUtils.get_player()
 	if player != null:
-		velocity = (player.global_position - global_position).normalized() * enemy_data.move_speed
+		velocity = (player.global_position - global_position).normalized() * enemy_data.move_speed * _speed_mult
 	else:
 		velocity = Vector2.ZERO
 	move_and_slide()
@@ -54,12 +64,12 @@ func _on_contact_tick() -> void:
 func _deal_contact_damage() -> void:
 	var player_health := _player_in_contact.get_node_or_null("Health") as Health
 	if player_health != null:
-		player_health.take_damage(enemy_data.contact_damage)
+		player_health.take_damage(enemy_data.contact_damage * _damage_mult)
 
 
 func _on_died() -> void:
 	RunStats.register_kill()
-	Economy.add(enemy_data.essence_value)
+	Economy.add(int(enemy_data.essence_value * _reward_mult))
 	_spawn_xp_gem()
 	queue_free()
 
@@ -70,5 +80,5 @@ func _spawn_xp_gem() -> void:
 	var gem := xp_gem_scene.instantiate()
 	gem.global_position = global_position
 	if gem.has_method("set_xp_value"):
-		gem.set_xp_value(enemy_data.xp_value)
+		gem.set_xp_value(enemy_data.xp_value * _xp_mult)
 	get_tree().current_scene.add_child(gem)

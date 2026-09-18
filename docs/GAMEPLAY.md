@@ -105,14 +105,18 @@ Ao atingir um desses níveis, o jogo mostra uma tela de evolução simples (nome
 
 ## 11. Loja Unificada de Upgrades
 
-Ao subir de nível, a Loja de Upgrades reúne em uma única tela **duas partes**:
+Ao subir de nível, a Loja de Upgrades reúne em uma única tela rolável, do topo para baixo:
 
-- **SUA BUILD**: um resumo compacto do que o jogador já tem — armas agrupadas por nome e nível (ex.: `Ruyi Jingu Bang Lv.1 × 5`), com um botão **FUNDIR** ao lado de qualquer grupo com 2+ cópias no mesmo nível (pede confirmação antes de aplicar); e passivas/poderes com seu nível atual.
-- **OFERTAS**: até 4 ofertas sorteadas — armas, passivas ou poderes, cada uma com categoria, descrição e preço em Essência.
+- **CABEÇALHO**: nível atual, Essência, estágio do personagem e tempo de run.
+- **OFERTAS**: até 4 ofertas sorteadas em grade — armas, passivas ou poderes, cada uma com ícone, categoria, descrição, preço e um botão de **cadeado** (🔒/🔓) para travar a oferta contra o reroll.
+- **SUA BUILD**: passivas/poderes à esquerda, armas à direita — armas agrupadas por nome e nível (ex.: `Ruyi Jingu Bang Lv.1 × 5`), com um botão **FUNDIR** ao lado de qualquer grupo com 2+ cópias no mesmo nível (pede confirmação antes de aplicar).
+- **STATS**: resumo dos atributos atuais do personagem (vida máxima, velocidade, dano, velocidade de ataque, raio de coleta, XP ganho), lido direto de `PlayerStats` — nunca um número recalculado à parte.
 
-O jogador pode comprar **múltiplas ofertas na mesma visita** (enquanto tiver Essência) e fundir armas da build quantas vezes quiser, tudo na mesma tela rolável. Um botão **REROLL** gera um novo conjunto de ofertas por um custo crescente. Só fecha manualmente pelo botão **CONTINUAR** — o jogo permanece pausado até lá.
+O jogador pode comprar **múltiplas ofertas na mesma visita** (enquanto tiver Essência) e fundir armas da build quantas vezes quiser, tudo na mesma tela. Um botão **REROLL** gera um novo conjunto de ofertas por um custo crescente — ofertas travadas (🔒) sobrevivem ao reroll, só as destravadas são sorteadas de novo. Só fecha manualmente pelo botão **CONTINUAR** — o jogo permanece pausado até lá.
 
 A primeira compra de cada visita à loja é sempre gratuita (consome o "token" ganho ao subir de nível), então subir de nível nunca é frustrante mesmo com pouca Essência acumulada.
+
+**Preços sobem com o uso**: cada compra paga (não a gratuita do token) encarece as próximas ofertas e o próprio reroll em ~12%, cumulativo pelo resto da run — evita que o mesmo item custe sempre igual do início ao fim, mesmo com a Essência entrando cada vez mais rápido.
 
 ### Comprar vs. Fundir — Nunca a Mesma Coisa
 
@@ -151,10 +155,49 @@ Um upgrade novo é apenas uma entrada de dados a mais — nenhuma dessas passiva
   - Eventos ou marcos narrativos entre partidas.
   - Novas armas/poderes mitológicos associados a essa progressão.
 
-## 15. Progressão Permanente
+## 15. Progressão Permanente (Meta-Progressão)
 
-- Fora do escopo de implementação nesta etapa (sem loja, sem meta-progressão complexa).
-- A arquitetura deve deixar espaço para, futuramente, bônus permanentes persistidos entre partidas (ex.: vida base maior, desbloqueio de armas iniciais).
+Diferente da Essência (que reseta a cada run), o Mythborn agora tem uma segunda economia que **persiste entre partidas**: **Fragmentos Míticos**.
+
+- Ganhos ao final de toda run (proporcional a tempo sobrevivido + nível alcançado) e por recompensas específicas (derrotar um chefe, desbloquear uma conquista).
+- Gastos na tela **PROGRESSÃO** (acessível pelo Menu Principal) em **melhorias permanentes**: hoje, *Poder Ancestral* (+2% de dano por nível, até 5) e *Vitalidade Ancestral* (+2% de vida máxima por nível, até 5). Cada nível custa mais que o anterior.
+- Aplicadas automaticamente no início de toda nova run (não é preciso reaplicar manualmente).
+- Salvos em disco (`user://meta_progress.cfg`) — sobrevivem a fechar e abrir o jogo de novo.
+
+## 15.1 Localidades
+
+Onde a run acontece. Nesta etapa existe uma localidade totalmente funcional:
+
+- **Domínio Chinês**: inimigos comuns (Grunt), três "ondas" de intensidade crescente ao longo do tempo (spawn mais rápido conforme a run avança) e um chefe, o **Rei Touro Demônio**, que aparece aos 5 minutos de sobrevivência.
+
+A arquitetura já suporta múltiplas localidades (cada uma com seu próprio conjunto de inimigos, ondas e chefes) — só a segunda ainda não foi criada.
+
+## 15.2 Modos e Desafios
+
+- **Survival**: o modo padrão. Depois de 15 minutos (o "ciclo principal"), entra automaticamente em **Endless** — a dificuldade (vida, dano e velocidade de spawn dos inimigos) continua subindo indefinidamente, a run nunca termina sozinha.
+- **Endless**: mesma escalada, mas já ativa desde o início da run.
+- **Desafio "Inferno"** (arquitetura pronta, não selecionável por uma tela ainda): +50% de vida nos inimigos, -20% de XP, recompensa 50% maior. Um desafio nunca é código específico — é só uma combinação de multiplicadores.
+
+## 15.3 Chefe
+
+O **Rei Touro Demônio** aparece aos 5 minutos de sobrevivência no Domínio Chinês. Reaproveita 100% do sistema de inimigo comum (perseguição, dano de contato, vida, targeting) — só adiciona nome, barra de vida própria no HUD e uma recompensa ao morrer (Essência + Fragmentos Míticos + desbloqueia a skin "Wukong Dourado").
+
+## 15.4 Conquistas
+
+Seis conquistas nesta etapa (cinco visíveis, uma secreta):
+
+- **Primeiro Sangue** — derrote um inimigo.
+- **Em Ascensão** — alcance o nível 2.
+- **O Rei Macaco** — evolua para Sun Wukong.
+- **Caçador de Lendas** — derrote um chefe.
+- **Sobrevivente** — sobreviva 5 minutos numa run.
+- 🔒 secreta: **Despertar Precoce** — alcance o Despertar em menos de 5 minutos.
+
+Cada uma concede uma recompensa (Fragmentos Míticos e, em um caso, uma skin) assim que a condição é satisfeita — não é preciso reivindicar manualmente. Consulte a lista completa (com o que já foi desbloqueado) na tela **CONQUISTAS** do Menu Principal.
+
+## 15.5 Skins
+
+Uma skin não altera atributos, só aparência (hoje, uma cor sobre o sprite do personagem). A primeira skin do jogo, **Wukong Dourado**, é desbloqueada ao derrotar o Rei Touro Demônio pela primeira vez, e passa a ser usada automaticamente em toda run seguinte.
 
 ## 16. Estrutura Básica de uma Partida
 
@@ -167,9 +210,10 @@ Um upgrade novo é apenas uma entrada de dados a mais — nenhuma dessas passiva
 
 ## 17. Tipos Iniciais de Inimigos
 
-Apenas um tipo nesta etapa:
-
 - **Inimigo Básico (Grunt)**: sem ataque à distância, persegue o jogador em linha reta e causa dano por contato. Vida, velocidade, dano de contato e XP concedido são definidos via dado (`EnemyData`), preparando o terreno para novos tipos apenas com novos dados/cenas.
+- **Rei Touro Demônio** (chefe, ver seção 15.3): mesmo comportamento do Grunt, só que muito mais forte, com nome/vida próprios no HUD e recompensa ao morrer.
+
+A dificuldade de todo inimigo (vida, dano, velocidade) escala automaticamente com o tempo de run e o modo/desafio ativos (ver seção 15.2) — nenhum número fica fixo no spawner.
 
 ## 18. Escopo do Protótipo
 
@@ -183,9 +227,12 @@ Incluído nesta etapa:
 - Sistema de vida e dano (jogador e inimigos).
 - Sistema de XP, level-up, evolução de personagem e Loja Unificada de Upgrades (armas, passivas e poderes, com reroll).
 - Essência como moeda temporária da run.
-- Inventário de armas preparado para até 12 armas, sem duplicar itens já possuídos.
-- Interface mínima (vida, XP, nível, timer, Essência, estágio do personagem, armas atuais).
-- Estrutura completa de navegação: Menu Principal, Pause (com Configurações e saída confirmada, sem sobreposição de telas), Game Over com resultados da corrida, e reinício limpo da partida.
+- Inventário de armas preparado para até 12 armas — **duplicatas são o comportamento desejado** (ver seção 7), com fusão voluntária.
+- Interface mínima (vida, XP, nível, timer, Essência, estágio do personagem, armas atuais, barra de vida do chefe quando ativo).
+- Estrutura completa de navegação: Menu Principal (com Progressão e Conquistas funcionais), Pause (com Configurações e saída confirmada, sem sobreposição de telas), Game Over com resultados da corrida, e reinício limpo da partida.
+- Uma localidade (Domínio Chinês) com ondas de intensidade crescente e um chefe.
+- Modo Survival com transição automática para Endless; arquitetura pronta para Challenge/Boss Rush/Chaos.
+- Seis conquistas com recompensa automática; meta-progressão (Fragmentos Míticos, melhorias permanentes, skins) salva em disco.
 
 ## 19. Fluxo Global do Jogo
 
@@ -245,7 +292,9 @@ Ao morrer, o jogador vê imediatamente a tela de Game Over com o resultado da co
 - tempo sobrevivido;
 - nível alcançado;
 - inimigos derrotados;
-- upgrades escolhidos.
+- upgrades escolhidos;
+- chefes derrotados;
+- recompensa de Fragmentos Míticos ganha nesta run (fim-de-run + qualquer boss/conquista desbloqueada durante ela).
 
 Dali, pode escolher **JOGAR NOVAMENTE** (inicia uma corrida nova e limpa) ou **MENU PRINCIPAL**.
 
@@ -259,14 +308,15 @@ Os placeholders geométricos (retângulos/polígonos coloridos) foram substituí
 
 ## 26. Funcionalidades Planejadas para Etapas Futuras
 
-- Novos personagens (Zeus, Hades, Thor, Anúbis...), reutilizando `CharacterData`/`CharacterProgression`.
+- Novos personagens (Zeus, Hades, Thor, Anúbis...), reutilizando `CharacterData`/`CharacterProgression`/`CharacterUnlockData` (já preparado via `unlock_condition`).
 - Mais armas/poderes de outras mitologias na build de qualquer personagem.
 - Evolução de arma além do nível máximo (ex.: Ruyi Jingu Bang Lv.5 + condição → "Ascended") — o nivelamento e a fusão em si já existem, só falta esse próximo estágio.
-- Novos tipos de inimigos e chefes.
+- Novas localidades (só a do Domínio Chinês existe; a arquitetura de `LocationData`/`WaveData` já suporta mais), novos tipos de inimigo e novos chefes.
+- Tela de seleção de Localidade/Modo/Desafio (a arquitetura já existe e é testável por código; falta só a UI).
 - Progressão narrativa completa.
-- Progressão permanente entre partidas (meta progression) e desbloqueio de personagens.
+- Mais conquistas, mais skins, e uma tela de seleção de skin (hoje a primeira desbloqueada é equipada automaticamente).
 - Relíquias (categoria já reservada na loja, sem conteúdo ainda).
+- Bosses secretos (`BossData.secret`/`unlock_condition` já existem, sem conteúdo ainda) e o conceito dos "Quatro Cavaleiros" como possível cadeia de conteúdo secreto futura.
+- Bestiário e tela de Coleção (personagens/skins/armas/poderes/bosses/inimigos/localidades/conquistas) — hoje só Progressão e Conquistas têm tela própria.
 - Arte final substituindo os sprites básicos atuais.
-- Localidades e modos de jogo (Endless, Challenge, Boss Rush, Chaos).
-- Arte definitiva substituindo os placeholders.
-- Balanceamento e ajuste fino de dificuldade e economia de Essência.
+- Balanceamento e ajuste fino de dificuldade e economia de Essência/Fragmentos Míticos.

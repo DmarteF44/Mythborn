@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/main/Main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="2"]
@@ -10,6 +10,9 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/PauseMenu.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/ui/GameOverScreen.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://scenes/ui/EvolutionScreen.tscn" id="10"]
+[ext_resource type="Resource" path="res://resources/enemies/grunt_data.tres" id="11"]
+[ext_resource type="Script" path="res://scripts/main/BossDirector.gd" id="12"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Boss.tscn" id="13"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_h"]
 size = Vector2(1680, 40)
@@ -58,10 +61,15 @@ shape = SubResource("RectangleShape2D_h")
 [node name="EnemySpawner" type="Node2D" parent="."]
 script = ExtResource("3")
 enemy_scene = ExtResource("4")
+fallback_enemy_data = ExtResource("11")
 spawn_interval = 1.5
 spawn_radius = 500.0
 
 [node name="Timer" type="Timer" parent="EnemySpawner"]
+
+[node name="BossDirector" type="Node" parent="."]
+script = ExtResource("12")
+boss_scene = ExtResource("13")
 
 [node name="HUD" parent="." instance=ExtResource("5")]
 

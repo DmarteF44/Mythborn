@@ -18,6 +18,13 @@ Settings="*res://scripts/core/Settings.gd"
 Economy="*res://scripts/core/Economy.gd"
 Upgrades="*res://scripts/upgrades/UpgradePool.gd"
 Weapons="*res://scripts/weapons/WeaponPool.gd"
+MetaProgress="*res://scripts/core/MetaProgress.gd"
+Locations="*res://scripts/core/Locations.gd"
+RunConfig="*res://scripts/core/RunConfig.gd"
+Achievements="*res://scripts/core/Achievements.gd"
+DifficultyDirector="*res://scripts/core/DifficultyDirector.gd"
+MetaUpgrades="*res://scripts/core/MetaUpgrades.gd"
+Skins="*res://scripts/core/Skins.gd"
 
 [audio]
 

@@ -12,13 +12,19 @@ signal pause_requested
 @onready var weapon_label: Label = $TopBar/HBox/StatsVBox/WeaponLabel
 @onready var pause_button: Button = $TopBar/HBox/PauseButton
 
+@onready var boss_bar_layer: Control = $BossBar
+@onready var boss_name_label: Label = $BossBar/VBox/BossNameLabel
+@onready var boss_health_bar: ProgressBar = $BossBar/VBox/BossHealthBar
+
 var _player: Player = null
+var _boss: BossEnemy = null
 
 
 func _ready() -> void:
 	pause_button.pressed.connect(func() -> void: pause_requested.emit())
 	Economy.essence_changed.connect(_on_essence_changed)
 	_on_essence_changed(Economy.essence)
+	boss_bar_layer.visible = false
 
 
 func _process(_delta: float) -> void:
@@ -79,3 +85,22 @@ func _update_weapon_label() -> void:
 		var weapon_data: WeaponData = group["weapon_data"]
 		parts.append("%s Lv.%d×%d" % [weapon_data.display_name, group["level"], group["count"]])
 	weapon_label.text = "Armas %d/%d: %s" % [_player.weapon_inventory.weapons.size(), GameManager.MAX_WEAPONS, ", ".join(parts)]
+
+
+func show_boss_bar(boss: BossEnemy, display_name: String) -> void:
+	_boss = boss
+	boss_name_label.text = display_name.to_upper()
+	boss_health_bar.max_value = boss.health.max_health
+	boss_health_bar.value = boss.health.current_health
+	boss.boss_health_changed.connect(_on_boss_health_changed)
+	boss_bar_layer.visible = true
+
+
+func hide_boss_bar() -> void:
+	_boss = null
+	boss_bar_layer.visible = false
+
+
+func _on_boss_health_changed(current: float, max_value: float) -> void:
+	boss_health_bar.max_value = max_value
+	boss_health_bar.value = current

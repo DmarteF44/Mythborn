@@ -8,6 +8,8 @@ var enemies_defeated: int = 0
 var level_reached: int = 1
 var upgrades_taken: int = 0
 var weapons_owned: int = 0
+var bosses_defeated: int = 0
+var evolution_stage_reached: int = 0
 
 var active: bool = false
 
@@ -18,6 +20,8 @@ func reset() -> void:
 	level_reached = 1
 	upgrades_taken = 0
 	weapons_owned = 0
+	bosses_defeated = 0
+	evolution_stage_reached = 0
 
 
 func _process(delta: float) -> void:

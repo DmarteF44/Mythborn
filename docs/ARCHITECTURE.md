@@ -18,23 +18,46 @@ scenes/
   main/Main.tscn            # Arena + orquestração da partida
   player/Player.tscn
   enemies/Enemy.tscn
+  enemies/Boss.tscn          # Reaproveita Enemy via BossEnemy.gd
   weapons/Staff.tscn         # Ruyi Jingu Bang
   weapons/HairClones.tscn    # Clones de Pelo
   weapons/Spark.tscn         # Fagulha Divina
   weapons/Projectile.tscn    # Projétil genérico (usado pela Fagulha Divina)
   pickups/XPGem.tscn
   ui/HUD.tscn
-  ui/UpgradeShop.tscn        # Loja unificada (armas + passivas + poderes + reroll)
+  ui/UpgradeShop.tscn        # Loja unificada (ofertas + build em 2 colunas + stats)
   ui/EvolutionScreen.tscn
   ui/PauseMenu.tscn
   ui/SettingsMenu.tscn      # Reutilizada pelo MainMenu e pelo PauseMenu
   ui/GameOverScreen.tscn    # Acumula também o papel de tela de Resultados
+  ui/MetaUpgradeScreen.tscn # Tela "Progressão" (meta upgrades)
+  ui/AchievementsScreen.tscn# Tela "Conquistas" (somente leitura)
   ui/TouchControls.tscn
 scripts/
   core/GameManager.gd       # Autoload — estado global e navegação entre cenas
   core/RunStats.gd          # Autoload — estatísticas da corrida atual
   core/Settings.gd          # Autoload — preferências (som/música/vibração), persistidas
-  core/Economy.gd           # Autoload — Essência (moeda temporária da run)
+  core/Economy.gd           # Autoload — Essência (moeda temporária da run) + inflação de preço
+  core/MetaProgress.gd      # Autoload — conta persistente (moeda, unlocks, records, save)
+  core/Achievements.gd      # Autoload — catálogo de conquistas + checagem automática
+  core/Locations.gd         # Autoload — registro de localidades + qual está ativa
+  core/RunConfig.gd         # Autoload — modo + desafio ativos na run
+  core/DifficultyDirector.gd# Autoload — escalonamento de dificuldade (inclui rampa do Endless)
+  core/MetaUpgrades.gd      # Autoload — catálogo de melhorias permanentes
+  core/Skins.gd             # Autoload — catálogo de skins
+  content/UnlockCondition.gd
+  content/UnlockConditionChecker.gd
+  content/RewardData.gd
+  content/RewardResolver.gd
+  content/DifficultyModifier.gd
+  content/WaveData.gd
+  content/LocationData.gd
+  content/GameModeData.gd
+  content/ChallengeData.gd
+  content/BossData.gd
+  content/AchievementData.gd
+  content/CharacterSkinData.gd
+  content/MetaUpgradeData.gd
   targeting/TargetingUtils.gd
   combat/Health.gd
   characters/CharacterData.gd
@@ -55,6 +78,7 @@ scripts/
   weapons/WeaponPool.gd     # Autoload — catálogo de armas/poderes da loja
   enemies/EnemyData.gd
   enemies/Enemy.gd
+  enemies/BossEnemy.gd      # extends Enemy — só adiciona metadados de chefe
   enemies/EnemySpawner.gd
   xp/XPGem.gd
   upgrades/ShopCategory.gd       # Enum compartilhado (WEAPON/PASSIVE/POWER)
@@ -69,23 +93,30 @@ scripts/
   ui/PauseMenu.gd
   ui/SettingsMenu.gd
   ui/GameOverScreen.gd
+  ui/MetaUpgradeScreen.gd
+  ui/AchievementsScreen.gd
   ui/VirtualJoystick.gd
   main/Main.gd
+  main/BossDirector.gd
 resources/
   weapons/staff_data.tres
   weapons/hair_clones_data.tres
   weapons/spark_data.tres
   enemies/grunt_data.tres
+  enemies/bull_demon_king_enemy_data.tres
   characters/wukong_data.tres
   characters/wukong_stage_1_wukong.tres
   characters/wukong_stage_2_sun_wukong.tres
   characters/wukong_stage_3_awakened.tres
+  bosses/bull_demon_king_data.tres
+  locations/china_domain.tres
 default_bus_layout.tres     # Buses de áudio: Master, Music, SFX
 assets/
-  characters/wukong.png      # Sprite original, gerado por código (ver seção 12)
+  characters/wukong.png      # Sprites originais, gerados por código (ver seção 12)
   weapons/ruyi_jingu_bang.png
   enemies/grunt.png
   pickups/xp_gem.png
+  ui/icon_*.png               # Ícones da loja (arma/passiva/poder/lock)
 ```
 
 ## 3. Autoloads (Singletons)
@@ -93,11 +124,18 @@ assets/
 | Nome | Script | Responsabilidade |
 |---|---|---|
 | `GameManager` | `core/GameManager.gd` | Estado global (`MAIN_MENU`/`PLAYING`/`EVOLUTION`/`UPGRADE_SHOP`/`PAUSED`/`GAME_OVER`), troca entre `MainMenu.tscn` e `Main.tscn`, pausar/retomar, sinal `game_over`, constante `MAX_WEAPONS = 12`. Não guarda lógica de UI nem dados da corrida. |
-| `RunStats` | `core/RunStats.gd` | Estatísticas temporárias da corrida atual (tempo, inimigos derrotados, nível, upgrades, armas). Zeradas por `GameManager.start_new_run()`. |
+| `RunStats` | `core/RunStats.gd` | Estatísticas temporárias da corrida atual (tempo, inimigos/chefes derrotados, nível, estágio de evolução, upgrades, armas). Zeradas por `GameManager.start_new_run()`. |
 | `Settings` | `core/Settings.gd` | Preferências do jogador (som/música/vibração), persistidas em `user://settings.cfg`. |
-| `Economy` | `core/Economy.gd` | Essência da run atual: ganhar, gastar, custo de reroll, token de primeira-compra-grátis por level-up. Zerada por `GameManager.start_new_run()`. |
+| `Economy` | `core/Economy.gd` | Essência da run atual: ganhar, gastar, custo de reroll, token de primeira-compra-grátis por level-up, inflação de preço por compra (`purchases_made`). Zerada por `GameManager.start_new_run()`. |
 | `Upgrades` | `upgrades/UpgradePool.gd` | Catálogo de `UpgradeData` (passivas e poderes-passiva) disponíveis na loja. |
 | `Weapons` | `weapons/WeaponPool.gd` | Catálogo de armas/poderes (`WeaponData` + a cena correspondente) disponíveis na loja. |
+| `MetaProgress` | `core/MetaProgress.gd` | **A** conta persistente do jogador: Fragmentos Míticos, personagens/skins/conquistas desbloqueados, nível de cada meta upgrade, recordes. Salva em `user://meta_progress.cfg` (`ConfigFile`, com `version` reservado para migração). Nunca se mistura com `RunStats`/`Economy`. |
+| `Achievements` | `core/Achievements.gd` | Catálogo de `AchievementData` + checa automaticamente (via `_process`, só enquanto `RunStats.active`) se alguma condição foi satisfeita, aplicando a recompensa e persistindo em `MetaProgress`. |
+| `Locations` | `core/Locations.gd` | Registro de `LocationData` + qual está ativa (`current`) — hoje sempre o Domínio Chinês, sem tela de seleção ainda. |
+| `RunConfig` | `core/RunConfig.gd` | Modo (`GameModeData`) e desafio (`ChallengeData`, opcional) ativos na run; combina os dois modificadores + o da localidade em um só (`get_combined_modifier()`). |
+| `DifficultyDirector` | `core/DifficultyDirector.gd` | Multiplicador de dificuldade efetivo: `RunConfig.get_combined_modifier()` + uma rampa dependente do tempo assim que `RunStats.survival_time` passa de `current_mode.main_cycle_duration` (o Endless). |
+| `MetaUpgrades` | `core/MetaUpgrades.gd` | Catálogo de `MetaUpgradeData` (progressão permanente) + `try_purchase()` (gasta `MetaProgress.currency`, sobe o nível salvo). |
+| `Skins` | `core/Skins.gd` | Catálogo de `CharacterSkinData` + qual tint aplicar ao personagem atual (a primeira skin desbloqueada para aquele personagem). |
 
 ## 4. Responsabilidade de Cada Sistema
 
@@ -130,7 +168,7 @@ Acumula o papel de tela de Game Over e de Resultados (simplificação deliberada
 - `Camera2D` (segue o jogador por ser filho direto).
 - `Visual` (`Sprite2D` com o sprite de Wukong — ver seção "Assets Visuais") + `CollisionShape2D`.
 
-Em `_ready()`, `Player.gd` lê `progression.character_data` para definir vida/velocidade base e conceder a arma inicial — **nenhum dado de personagem fica hard-coded em `Player.gd`**, apenas a leitura genérica de `CharacterData`.
+Em `_ready()`, `Player.gd` lê `progression.character_data` para definir vida/velocidade base e conceder a arma inicial — **nenhum dado de personagem fica hard-coded em `Player.gd`**, apenas a leitura genérica de `CharacterData`. Em seguida, `_apply_meta_upgrades()` aplica os bônus permanentes já comprados (`MetaProgress.get_meta_upgrade_level()` de cada entrada em `MetaUpgrades.pool`) e `Skins.get_equipped_tint()` define a cor do `Visual` — ambos leem de autoloads persistentes, nenhum dos dois é recalculado ou duplicado aqui.
 
 ### Personagem (`scripts/characters/`)
 - `CharacterData` (Resource): quem o jogador é — id, nome, vida/velocidade base, arma inicial, e a lista ordenada de `CharacterEvolutionData`. Um personagem novo (Zeus, Hades...) é só um novo `.tres` desta classe.
@@ -242,11 +280,48 @@ Isso garante que **nunca duas telas de pausa apareçam ao mesmo tempo**: evoluç
 - **Evolução de arma além do nível máximo** (ex.: Ruyi Jingu Bang Lv.5 + condição → "Ascended"): `WeaponData` ganharia um campo `evolution_scene`/`evolution_condition`; `WeaponInventory.fuse()` já centraliza "o que acontece ao juntar 2 cópias", então essa evolução seria só mais um caso ali quando `level == max_level`.
 - **Melhorar arma existente via compra direta** (sem precisar de uma segunda cópia): hoje a única forma de subir o nível de uma arma é a fusão voluntária de 2 cópias iguais; um "upgrade direto" pago em Essência seria um método adicional em `WeaponInventory`, opcional e sem afetar a fusão.
 - **Poderes mitológicos de outros panteões**: novas entradas em `WeaponPool`/`UpgradePool`, exatamente como Clones de Pelo e Fagulha Divina foram adicionados — nenhuma delas exigiu tocar na `UpgradeShop`.
-- **Chefes**: nova cena estendendo o mesmo padrão de `Enemy` (Health, grupo `enemies`), com script próprio para padrões de ataque — o targeting e o dano já funcionam sem alteração.
-- **Progressão permanente**: um autoload adicional (`MetaProgress`) pode persistir dados entre partidas (ex.: salvar em arquivo, no mesmo padrão de `ConfigFile` já usado por `Settings`) e aplicar bônus iniciais ao `PlayerStats`/desbloquear personagens (`CharacterUnlockData`) na criação do jogador.
+- **Chefes**: novo `.tres` de `EnemyData` (stats) + `BossData` (metadados/recompensa) + adicionar em `LocationData.boss_pool` — `Boss.tscn`/`BossEnemy.gd` já são genéricos, nenhuma cena nova é necessária a menos que o comportamento (não só os números) precise mudar.
+- **Novas localidades**: um novo `LocationData.tres` com seu `enemy_pool`/`boss_pool`/`wave_profile` próprios; trocar `Locations.current` (via `set_current(id)`) é só o que falta para uma tela de seleção usá-lo.
+- **Novos modos/desafios**: uma nova entrada em `RunConfig.game_modes`/`challenges` — cada um é só uma composição de `DifficultyModifier`, nunca código específico.
 - **Narrativa**: eventos entre partidas podem ser orquestrados fora da arena (menu/hub), sem impacto na arquitetura de combate.
 - **Tela de preparação**: pode ser inserida entre o Menu Principal e a partida como um novo estado (`PRE_GAME`) e uma nova cena, sem alterar o resto do fluxo — `MainMenu` chamaria essa cena em vez de `GameManager.start_new_run()` diretamente, e ela decidiria quando de fato iniciar a run.
-- **Coleção / Progressão / Conquistas**: os botões desabilitados já reservados no Menu Principal podem virar cenas próprias, seguindo o mesmo padrão de `PauseMenu`/`SettingsMenu` (CanvasLayer independente, sem lógica de UI dentro do GameManager).
+- **Coleção**: o botão já reservado no Menu Principal pode virar uma tela própria (personagens/skins/armas/poderes/bosses/inimigos/localidades/conquistas), seguindo o mesmo padrão de `MetaUpgradeScreen`/`AchievementsScreen` (CanvasLayer independente, sem lógica de UI dentro do GameManager).
+- **Tela de seleção de Localidade/Modo/Desafio**: toda a lógica (`Locations`, `RunConfig`) já existe e é testável por código; falta só a UI que chama `set_current`/`set_mode`/`set_challenge` antes de `GameManager.start_new_run()`.
+
+## 11. Arquitetura de Conteúdo (Etapa 6)
+
+Consolidação da fundação para conteúdo em escala: localidades, modos, desafios, chefes, conquistas, recompensas, desbloqueios, skins e meta-progressão. Segue o mesmo princípio já usado por armas/passivas: **dados em Resources, catálogos em autoloads pequenos e focados, nenhum `if` específico por item**.
+
+### Blocos de dados reutilizáveis (`scripts/content/`)
+- `UnlockCondition` (Resource): condição genérica — `KILLS`/`SURVIVAL_TIME`/`LEVEL_REACHED`/`BOSS_DEFEATED`/`CHARACTER_EVOLUTION`/`ACHIEVEMENT`/`CURRENCY`/`COMBINATION` (AND de sub-condições, cada uma podendo comparar "no mínimo" ou "no máximo"). Avaliada por `UnlockConditionChecker.is_met()`, que só lê fontes já centralizadas (`RunStats`, `Economy`, `MetaProgress`, `Achievements`) — nenhum sistema mantém seu próprio contador duplicado.
+- `RewardData` (Resource): pode conter Fragmentos Míticos, Essência, desbloqueio de personagem/skin/conquista ao mesmo tempo. Aplicada de forma centralizada por `RewardResolver.apply()` — nenhum sistema credita moeda ou desbloqueia conteúdo "na mão".
+- `DifficultyModifier` (Resource): bloco de multiplicadores (vida/dano/velocidade/spawn/XP/recompensa) reutilizado por `GameModeData`, `ChallengeData` e `LocationData`. `DifficultyModifier.combine()` compõe vários em um só — um desafio é literalmente só isso, nunca lógica própria.
+
+### Localidade, Ondas e Dificuldade
+- `LocationData` (Resource): onde a run acontece — `enemy_pool`/`elite_pool` (dados, não cenas — `EnemySpawner` instancia sempre a mesma `Enemy.tscn` genérica e só troca o `enemy_data`), `boss_pool`, `wave_profile` (lista de `WaveData`), `difficulty_modifier`, `initial_duration`, `unlock_condition`.
+- `WaveData` (Resource): uma janela de tempo (`start_time`/`end_time`) com seu próprio `spawn_interval` (e opcionalmente um `enemy_pool_override`). `EnemySpawner._current_wave()` só pergunta "qual onda está ativa agora?" — os números ficam inteiramente no `.tres` da localidade.
+- `Locations` (autoload): registro de `LocationData` + `current`. Nesta etapa só existe o Domínio Chinês (`china_domain.tres`).
+- `RunConfig` (autoload): `current_mode`/`current_challenge` da run + `get_combined_modifier()` (soma o modificador do modo, do desafio e da localidade atual).
+- `DifficultyDirector` (autoload): `get_modifier()` pega o combinado de `RunConfig` e, se `RunStats.survival_time` já passou de `current_mode.main_cycle_duration`, aplica uma rampa adicional (+12%/minuto de vida/dano/spawn) — é assim que o Survival "vira" Endless sozinho, sem nenhuma checagem espalhada pelo `Main.gd`. `Enemy._ready()` lê esse modificador uma vez ao spawnar (vida/dano/velocidade/XP/recompensa do inimigo); `EnemySpawner` usa `get_spawn_interval_mult()` a cada disparo.
+
+### Boss
+- `BossData` (Resource): metadados do chefe (nome/origem/descrição/`spawn_time`/`reward`/`secret`) + uma referência a um `EnemyData` normal para vida/velocidade/dano de contato — **o combate em si não é reimplementado**.
+- `BossEnemy` (`extends Enemy`): só sobrescreve `_ready()` (usa `boss_data.enemy_data` e repassa `health_changed` como `boss_health_changed`, para a UI) e `_on_died()` (chama `super._on_died()` — mantendo XP/Essência/kill count normais — e adiciona `RunStats.bosses_defeated += 1` + `RewardResolver.apply(boss_data.reward)`).
+- `BossDirector` (nó em `Main.tscn`): a cada frame (checagem O(nº de chefes da localidade), trivial), compara `RunStats.survival_time` com `boss_data.spawn_time` de cada chefe do `Locations.current.boss_pool` ainda não spawnado. `Main.gd` só escuta os sinais `boss_spawned`/`boss_defeated` para mostrar/esconder a barra de vida do chefe no HUD.
+
+### Conquistas e Recompensas
+- `AchievementData` (Resource): id, nome, descrição, `secret`, `condition` (`UnlockCondition`), `reward` (`RewardData`).
+- `Achievements` (autoload): monta o catálogo (6 entradas, uma secreta) e, em `_process()` — só enquanto `RunStats.active` —, checa se alguma condição ainda não desbloqueada foi satisfeita; se sim, aplica a recompensa e persiste via `MetaProgress.unlock_achievement()`. `force_unlock(id)` existe para recompensas que apontam direto para uma conquista (`RewardData.unlock_achievement_id`).
+- A tela **Conquistas** (`AchievementsScreen`, aberta pelo Menu Principal) é só leitura: lista `Achievements.pool`, mostrando "???" para as secretas ainda não desbloqueadas.
+
+### Meta-Progressão (conta persistente)
+- `MetaProgress` (autoload): a única fonte de verdade do que sobrevive entre partidas — Fragmentos Míticos, personagens/skins/conquistas desbloqueados, nível de cada meta upgrade, recordes (`update_record`, guarda o melhor valor). Salva em `user://meta_progress.cfg` via `ConfigFile`, com um campo `version` já reservado para migração futura. **Nunca se mistura com `RunStats`/`Economy`** (que são temporários).
+- `MetaUpgradeData` + `MetaUpgrades` (autoload): 2 melhorias funcionais (`meta_damage`, `meta_max_hp`), cada nível custando mais que o anterior (`get_cost_for_next_level`). `Player._apply_meta_upgrades()` lê o nível salvo de cada uma e aplica o bônus uma vez, no início da run — mesmo `match` de tipos que `PlayerPassives` usa, sem duplicar a lógica de "o que cada tipo de bônus faz".
+- `CharacterSkinData` + `Skins` (autoload): uma skin só muda aparência (`tint` sobre o `Visual`). Sem tela de seleção ainda — `Skins.get_equipped_tint(character_id)` retorna a primeira skin desbloqueada para aquele personagem, aplicada automaticamente em `Player._ready()`.
+- A tela **Progressão** (`MetaUpgradeScreen`, aberta pelo Menu Principal) mostra os 2 meta upgrades com nível atual/próximo/custo e compra na hora (`MetaUpgrades.try_purchase()`).
+
+### Fim de Run → Recompensa (sem duplicar)
+`Main.gd` está conectado a `GameManager.game_over`, que **só dispara uma vez por run** (o próprio `GameManager.trigger_game_over()` já tem a guarda `if state == GAME_OVER: return`) — não há necessidade de uma guarda adicional nesse ponto. `GameOverScreen.show_results()` credita uma recompensa simples de fim-de-run (proporcional a tempo + nível) com sua própria guarda local (`_reward_applied`) como segunda camada de segurança contra clique duplo no botão. Recompensas de chefe/conquista já foram creditadas no instante em que aconteceram, via `RewardResolver` — o fim de run não as re-aplica.
 
 ## 12. Assets Visuais (Etapa 5)
 
@@ -265,3 +340,8 @@ O bastão (`SwingVisual` em `Staff.tscn`) trocou dois `Polygon2D` (cabo + ponta)
 - Evolução de arma além do `max_level` (ex.: "Ascended") ainda não existe — a arquitetura permite (ver seção 10), mas não foi implementada nesta etapa.
 - Se dois estágios de evolução de personagem forem cruzados numa única chamada de `add_xp()` (XP muito acima do necessário de uma vez, o que não acontece em jogo normal, só forçando via debug), apenas a última evolução atingida é mostrada na `EvolutionScreen`, embora os bônus de todas sejam aplicados corretamente.
 - Os sprites são deliberadamente simples (poucas cores, sem animação) — servem para dar identidade visual básica, não são arte final.
+- Não há tela de seleção de Localidade/Modo/Desafio — `Locations.current`, `RunConfig.current_mode` e `RunConfig.current_challenge` têm defaults sensatos (Domínio Chinês, Survival, nenhum desafio) e toda a troca é testável por código (`set_current`/`set_mode`/`set_challenge`), mas nenhuma UI ainda chama isso.
+- Só existem 1 localidade, 1 chefe, 1 desafio e 6 conquistas — a arquitetura suporta múltiplos de cada, só o conteúdo em si ainda não foi produzido em escala (fora do escopo desta etapa, por decisão explícita).
+- Sem tela de seleção de skin — a primeira desbloqueada para o personagem é equipada automaticamente; múltiplas skins do mesmo personagem ainda não têm como o jogador escolher entre elas.
+- Categoria `RELIC`, bosses secretos com conteúdo real e a cadeia "Quatro Cavaleiros" mencionados como exemplos futuros no pedido original ainda não têm nenhuma entrada — só os campos (`secret`, `unlock_condition`) já existem em `BossData`/`AchievementData` para quando isso for produzido.
+- Bestiário e tela de Coleção ainda não existem — `RunStats`/`MetaProgress` já guardam dados suficientes (kills, bosses derrotados, conquistas) para alimentá-los quando forem construídos.

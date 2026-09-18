@@ -66,6 +66,7 @@ func _flash_target(target: Node2D) -> void:
 	var visual := target.get_node_or_null("Visual") as CanvasItem
 	if visual == null:
 		return
-	visual.modulate = Color(1.8, 1.8, 1.8, 1.0)
+	var original_modulate := visual.modulate
+	visual.modulate = original_modulate * Color(1.8, 1.8, 1.8, 1.0)
 	var tween := target.create_tween()
-	tween.tween_property(visual, "modulate", Color(1, 1, 1, 1), 0.15)
+	tween.tween_property(visual, "modulate", original_modulate, 0.15)

@@ -91,6 +91,24 @@ horizontal_alignment = 2
 theme_override_font_sizes/font_size = 22
 text = "0"
 
+[node name="BossesLabel" type="Label" parent="CenterContainer/Panel/VBox/Stats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Chefes derrotados"
+
+[node name="BossesValue" type="Label" parent="CenterContainer/Panel/VBox/Stats"]
+layout_mode = 2
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 22
+text = "0"
+
+[node name="RewardLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+modulate = Color(0.7, 0.95, 1, 1)
+text = "+0 Fragmentos Míticos"
+
 [node name="RetryButton" type="Button" parent="CenterContainer/Panel/VBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 76)

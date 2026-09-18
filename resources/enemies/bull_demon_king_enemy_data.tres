@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/EnemyData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Rei Touro Demônio"
+max_health = 400.0
+move_speed = 70.0
+contact_damage = 18.0
+xp_value = 40.0
+essence_value = 60

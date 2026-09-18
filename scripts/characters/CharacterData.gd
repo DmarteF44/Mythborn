@@ -17,3 +17,7 @@ extends Resource
 
 ## Ordenado por level_required crescente; o índice 0 é sempre o estágio inicial.
 @export var evolutions: Array[CharacterEvolutionData] = []
+
+## null/ALWAYS_MET = disponível desde o início (caso do Wukong). Reutilizado
+## pela futura tela de seleção de personagem via UnlockConditionChecker.
+@export var unlock_condition: UnlockCondition

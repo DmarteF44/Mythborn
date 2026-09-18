@@ -8,34 +8,69 @@ extends RefCounted
 ## docs/GAMEPLAY.md), mesmo já possuídas; só ficam desabilitadas (com o
 ## motivo explicado) se o inventário estiver cheio.
 ## Passivas/poderes: uma vez no nível máximo, nunca mais são oferecidos.
+##
+## A distribuição entre categorias é ponderada (CATEGORY_WEIGHTS) para
+## evitar que a loja sorteie 4 armas ou 4 passivas seguidas com frequência.
+
+const CATEGORY_WEIGHTS := {
+	ShopCategory.Type.WEAPON: 1.0,
+	ShopCategory.Type.PASSIVE: 1.3,
+	ShopCategory.Type.POWER: 0.8,
+}
 
 
-static func generate_offers(count: int, player: Player) -> Array[ShopOffer]:
+## `exclude_ids` evita re-sortear ofertas já travadas (lock) durante um reroll.
+static func generate_offers(count: int, player: Player, exclude_ids: Array[String] = []) -> Array[ShopOffer]:
 	var candidates: Array[ShopOffer] = []
 
 	for entry in Weapons.pool:
+		var weapon_data: WeaponData = entry["data"]
+		if exclude_ids.has(weapon_data.id):
+			continue
 		candidates.append(_build_weapon_offer(entry, player))
 
 	for upgrade_data in Upgrades.pool:
+		if exclude_ids.has(upgrade_data.id):
+			continue
 		if not player.passives.can_upgrade(upgrade_data):
 			continue
 		candidates.append(_build_passive_offer(upgrade_data, player))
 
-	candidates.shuffle()
+	return _weighted_pick(candidates, count)
 
+
+static func _weighted_pick(candidates: Array[ShopOffer], count: int) -> Array[ShopOffer]:
+	var pool := candidates.duplicate()
+	pool.shuffle()
 	var result: Array[ShopOffer] = []
-	for i in range(min(count, candidates.size())):
-		result.append(candidates[i])
+
+	while result.size() < count and not pool.is_empty():
+		var total_weight := 0.0
+		for offer in pool:
+			total_weight += CATEGORY_WEIGHTS.get(offer.category, 1.0)
+
+		var roll := randf() * total_weight
+		var chosen_index := 0
+		for i in pool.size():
+			roll -= CATEGORY_WEIGHTS.get(pool[i].category, 1.0)
+			if roll <= 0.0:
+				chosen_index = i
+				break
+
+		result.append(pool[chosen_index])
+		pool.remove_at(chosen_index)
+
 	return result
 
 
 static func _build_weapon_offer(entry: Dictionary, player: Player) -> ShopOffer:
 	var weapon_data: WeaponData = entry["data"]
 	var offer := ShopOffer.new()
+	offer.id = weapon_data.id
 	offer.category = weapon_data.shop_category
 	offer.weapon_data = weapon_data
 	offer.weapon_scene = entry["scene"]
-	offer.price = weapon_data.price
+	offer.base_price = weapon_data.price
 	offer.title = weapon_data.display_name
 	offer.description = "Dano %d · Alcance %d · Cooldown %.1fs (Lv.1)" % [weapon_data.damage, weapon_data.range, weapon_data.cooldown]
 
@@ -52,9 +87,10 @@ static func _build_weapon_offer(entry: Dictionary, player: Player) -> ShopOffer:
 
 static func _build_passive_offer(upgrade_data: UpgradeData, player: Player) -> ShopOffer:
 	var offer := ShopOffer.new()
+	offer.id = upgrade_data.id
 	offer.category = upgrade_data.shop_category
 	offer.upgrade_data = upgrade_data
-	offer.price = upgrade_data.price
+	offer.base_price = upgrade_data.price
 	offer.title = upgrade_data.title
 
 	var current_level := player.passives.get_level(upgrade_data.id)

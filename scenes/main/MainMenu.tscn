@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/MainMenu.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ui/SettingsMenu.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/ui/MetaUpgradeScreen.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/ui/AchievementsScreen.tscn" id="4"]
 
 [node name="MainMenu" type="Control"]
 anchor_right = 1.0
@@ -62,17 +64,17 @@ text = "Coleção
 [node name="Progression" type="Button" parent="CenterContainer/VBox/FutureRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(110, 48)
-disabled = true
 theme_override_font_sizes/font_size = 14
-text = "Progressão
-(futuro)"
+text = "Progressão"
 
 [node name="Achievements" type="Button" parent="CenterContainer/VBox/FutureRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(110, 48)
-disabled = true
 theme_override_font_sizes/font_size = 14
-text = "Conquistas
-(futuro)"
+text = "Conquistas"
 
 [node name="SettingsMenu" parent="." instance=ExtResource("2")]
+
+[node name="MetaUpgradeScreen" parent="." instance=ExtResource("3")]
+
+[node name="AchievementsScreen" parent="." instance=ExtResource("4")]
