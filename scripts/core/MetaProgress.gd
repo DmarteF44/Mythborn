@@ -13,8 +13,18 @@ var currency: int = 0 ## Fragmentos Míticos
 var unlocked_characters: Array[String] = ["wukong"]
 var unlocked_skins: Array[String] = []
 var unlocked_achievements: Array[String] = []
+var unlocked_locations: Array[String] = []
 var meta_upgrade_levels: Dictionary = {}
 var records: Dictionary = {}
+
+## character_id -> skin_id equipada. Skin ausente/"default" = sem tint.
+var equipped_skins: Dictionary = {}
+
+## location_id -> data já descoberta (primeira vez que uma run a usou).
+var discovered_locations: Array[String] = []
+
+## boss_id -> {"times_fought": int, "times_defeated": int}
+var boss_encounters: Dictionary = {}
 
 
 func _ready() -> void:
@@ -70,6 +80,40 @@ func is_skin_unlocked(id: String) -> bool:
 	return unlocked_skins.has(id)
 
 
+func equip_skin(character_id: String, skin_id: String) -> void:
+	equipped_skins[character_id] = skin_id
+	_save()
+
+
+func get_equipped_skin(character_id: String) -> String:
+	return equipped_skins.get(character_id, "default")
+
+
+func discover_location(id: String) -> void:
+	if discovered_locations.has(id):
+		return
+	discovered_locations.append(id)
+	_save()
+
+
+func is_location_discovered(id: String) -> bool:
+	return discovered_locations.has(id)
+
+
+func register_boss_encounter(boss_id: String, defeated: bool) -> void:
+	var entry: Dictionary = boss_encounters.get(boss_id, {"times_fought": 0, "times_defeated": 0})
+	if defeated:
+		entry["times_defeated"] = int(entry.get("times_defeated", 0)) + 1
+	else:
+		entry["times_fought"] = int(entry.get("times_fought", 0)) + 1
+	boss_encounters[boss_id] = entry
+	_save()
+
+
+func get_boss_encounter(boss_id: String) -> Dictionary:
+	return boss_encounters.get(boss_id, {"times_fought": 0, "times_defeated": 0})
+
+
 func get_meta_upgrade_level(id: String) -> int:
 	return meta_upgrade_levels.get(id, 0)
 
@@ -100,8 +144,12 @@ func _save() -> void:
 	config.set_value("meta", "unlocked_characters", unlocked_characters)
 	config.set_value("meta", "unlocked_skins", unlocked_skins)
 	config.set_value("meta", "unlocked_achievements", unlocked_achievements)
+	config.set_value("meta", "unlocked_locations", unlocked_locations)
 	config.set_value("meta", "meta_upgrade_levels", meta_upgrade_levels)
 	config.set_value("meta", "records", records)
+	config.set_value("meta", "equipped_skins", equipped_skins)
+	config.set_value("meta", "discovered_locations", discovered_locations)
+	config.set_value("meta", "boss_encounters", boss_encounters)
 	config.save(SAVE_PATH)
 
 
@@ -115,5 +163,9 @@ func _load() -> void:
 	unlocked_characters = config.get_value("meta", "unlocked_characters", ["wukong"])
 	unlocked_skins = config.get_value("meta", "unlocked_skins", [])
 	unlocked_achievements = config.get_value("meta", "unlocked_achievements", [])
+	unlocked_locations = config.get_value("meta", "unlocked_locations", [])
 	meta_upgrade_levels = config.get_value("meta", "meta_upgrade_levels", {})
 	records = config.get_value("meta", "records", {})
+	equipped_skins = config.get_value("meta", "equipped_skins", {})
+	discovered_locations = config.get_value("meta", "discovered_locations", [])
+	boss_encounters = config.get_value("meta", "boss_encounters", {})

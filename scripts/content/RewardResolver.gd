@@ -15,6 +15,9 @@ static func apply(reward: RewardData) -> void:
 	if reward.unlock_character_id != "":
 		MetaProgress.unlock_character(reward.unlock_character_id)
 	if reward.unlock_skin_id != "":
+		var already_unlocked := MetaProgress.is_skin_unlocked(reward.unlock_skin_id)
 		MetaProgress.unlock_skin(reward.unlock_skin_id)
+		if not already_unlocked and RunStats.active:
+			RunStats.skins_unlocked_this_run.append(reward.unlock_skin_id)
 	if reward.unlock_achievement_id != "":
 		Achievements.force_unlock(reward.unlock_achievement_id)

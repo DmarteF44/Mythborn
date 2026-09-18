@@ -25,6 +25,7 @@ Achievements="*res://scripts/core/Achievements.gd"
 DifficultyDirector="*res://scripts/core/DifficultyDirector.gd"
 MetaUpgrades="*res://scripts/core/MetaUpgrades.gd"
 Skins="*res://scripts/core/Skins.gd"
+Characters="*res://scripts/core/Characters.gd"
 
 [audio]
 

@@ -166,17 +166,20 @@ Diferente da Essência (que reseta a cada run), o Mythborn agora tem uma segunda
 
 ## 15.1 Localidades
 
-Onde a run acontece. Nesta etapa existe uma localidade totalmente funcional:
+Onde a run acontece. Nesta etapa existem duas:
 
 - **Domínio Chinês**: inimigos comuns (Grunt), três "ondas" de intensidade crescente ao longo do tempo (spawn mais rápido conforme a run avança) e um chefe, o **Rei Touro Demônio**, que aparece aos 5 minutos de sobrevivência.
+- **Domínio Grego**: inimigo próprio (Sátiro Selvagem, mais rápido e mais frágil que o Grunt), duas ondas, sem chefe ainda — existe principalmente para comprovar que trocar de localidade realmente muda o conteúdo da run (inimigos e ritmo diferentes), não só o nome mostrado na tela.
 
-A arquitetura já suporta múltiplas localidades (cada uma com seu próprio conjunto de inimigos, ondas e chefes) — só a segunda ainda não foi criada.
+A arquitetura já suporta quantas localidades forem necessárias (cada uma com seu próprio conjunto de inimigos, ondas e chefes).
 
 ## 15.2 Modos e Desafios
 
 - **Survival**: o modo padrão. Depois de 15 minutos (o "ciclo principal"), entra automaticamente em **Endless** — a dificuldade (vida, dano e velocidade de spawn dos inimigos) continua subindo indefinidamente, a run nunca termina sozinha.
 - **Endless**: mesma escalada, mas já ativa desde o início da run.
-- **Desafio "Inferno"** (arquitetura pronta, não selecionável por uma tela ainda): +50% de vida nos inimigos, -20% de XP, recompensa 50% maior. Um desafio nunca é código específico — é só uma combinação de multiplicadores.
+- **Desafio "Inferno"**: +50% de vida nos inimigos, -20% de XP, recompensa 50% maior. Um desafio nunca é código específico — é só uma combinação de multiplicadores.
+
+Personagem, skin, localidade, modo e desafio são escolhidos antes de cada run, num fluxo de telas pelo Menu Principal (ver seção 20).
 
 ## 15.3 Chefe
 
@@ -229,9 +232,11 @@ Incluído nesta etapa:
 - Essência como moeda temporária da run.
 - Inventário de armas preparado para até 12 armas — **duplicatas são o comportamento desejado** (ver seção 7), com fusão voluntária.
 - Interface mínima (vida, XP, nível, timer, Essência, estágio do personagem, armas atuais, barra de vida do chefe quando ativo).
-- Estrutura completa de navegação: Menu Principal (com Progressão e Conquistas funcionais), Pause (com Configurações e saída confirmada, sem sobreposição de telas), Game Over com resultados da corrida, e reinício limpo da partida.
-- Uma localidade (Domínio Chinês) com ondas de intensidade crescente e um chefe.
-- Modo Survival com transição automática para Endless; arquitetura pronta para Challenge/Boss Rush/Chaos.
+- Estrutura completa de navegação: Menu Principal (com Coleção, Progressão e Conquistas funcionais), fluxo de seleção de Personagem/Skin/Localidade/Modo/Desafio antes de toda run, Pause (com Configurações e saída confirmada, sem sobreposição de telas), Game Over organizado em seções, e reinício limpo da partida.
+- Duas localidades (Domínio Chinês com chefe, Domínio Grego sem chefe) com ondas de intensidade crescente.
+- Modos Survival (transição automática para Endless) e Endless (escalada desde o início), ambos selecionáveis; arquitetura pronta para Challenge/Boss Rush/Chaos.
+- Desafio "Inferno" selecionável.
+- Skin "Wukong Dourado" selecionável/equipável de verdade (não só desbloqueável).
 - Seis conquistas com recompensa automática; meta-progressão (Fragmentos Míticos, melhorias permanentes, skins) salva em disco.
 
 ## 19. Fluxo Global do Jogo
@@ -262,9 +267,21 @@ Estados possíveis (`GameManager.State`): `MAIN_MENU`, `PLAYING`, `EVOLUTION`, `
 Tela inicial do jogo (`MainMenu.tscn`), com:
 
 - Título "MYTHBORN".
-- Botão **JOGAR** — inicia uma partida nova e completamente limpa.
+- Botão **JOGAR** — abre o fluxo de seleção da run (ver seção 20.1).
 - Botão **CONFIGURAÇÕES** — abre o painel de configurações por cima do menu.
-- Uma fileira de botões desabilitados ("Coleção", "Progressão", "Conquistas") reservando espaço visual para funcionalidades futuras — não fazem nada nesta etapa.
+- Botão **COLEÇÃO** — hub somente-leitura com abas Personagens / Skins / Localidades / Bosses / Conquistas, mostrando "???" para o que ainda não foi descoberto/desbloqueado.
+- Botão **PROGRESSÃO** — melhorias permanentes pagas em Fragmentos Míticos.
+- Botão **CONQUISTAS** — lista de conquistas com progresso.
+
+### 20.1 Fluxo de Início de Run
+
+Ao apertar JOGAR, o jogador passa por uma sequência de telas antes da partida começar:
+
+```
+PERSONAGEM → SKIN → LOCALIDADE → MODO → DESAFIO → RESUMO → (COMEÇAR) → PARTIDA
+```
+
+Cada tela mostra as opções disponíveis (com as ainda bloqueadas exibindo "🔒" e o motivo) e reaproveita o mesmo componente visual de seleção — só o conteúdo muda. "Voltar" em qualquer etapa retorna à etapa anterior; no Resumo, revê tudo o que foi escolhido (personagem, skin, localidade, modo, desafio) antes de confirmar. Cada escolha já é aplicada imediatamente aos sistemas reais (não é só um texto na tela) — a run que começa usa exatamente o que foi selecionado.
 
 ## 21. Pause
 
@@ -287,14 +304,11 @@ As preferências são salvas em `user://settings.cfg` e persistem entre sessões
 
 ## 23. Game Over e Resultados
 
-Ao morrer, o jogador vê imediatamente a tela de Game Over com o resultado da corrida:
+Ao morrer, o jogador vê imediatamente a tela de Game Over, organizada em três seções (nunca uma parede de texto só):
 
-- tempo sobrevivido;
-- nível alcançado;
-- inimigos derrotados;
-- upgrades escolhidos;
-- chefes derrotados;
-- recompensa de Fragmentos Míticos ganha nesta run (fim-de-run + qualquer boss/conquista desbloqueada durante ela).
+- **RESULTADO DA RUN**: personagem/estágio, localidade, modo, desafio, tempo sobrevivido, nível, inimigos/chefes derrotados, Essência total ganha, armas e passivas/poderes da build final.
+- **RECOMPENSA PERMANENTE**: quantos Fragmentos Míticos essa run rendeu de verdade (já soma qualquer recompensa de chefe/conquista ganha durante ela, sem duplicar).
+- **NOVOS DESBLOQUEIOS** (só aparece se houver algo): conquistas e skins desbloqueadas durante essa run específica.
 
 Dali, pode escolher **JOGAR NOVAMENTE** (inicia uma corrida nova e limpa) ou **MENU PRINCIPAL**.
 
@@ -308,15 +322,16 @@ Os placeholders geométricos (retângulos/polígonos coloridos) foram substituí
 
 ## 26. Funcionalidades Planejadas para Etapas Futuras
 
-- Novos personagens (Zeus, Hades, Thor, Anúbis...), reutilizando `CharacterData`/`CharacterProgression`/`CharacterUnlockData` (já preparado via `unlock_condition`).
+- Novos personagens (Zeus, Hades, Thor, Anúbis...) com aparência própria — a seleção/progressão/evolução já funcionam para qualquer `CharacterData` novo, só falta um segundo `Visual`/sprite por personagem (hoje `Player.tscn` só tem o de Wukong).
 - Mais armas/poderes de outras mitologias na build de qualquer personagem.
 - Evolução de arma além do nível máximo (ex.: Ruyi Jingu Bang Lv.5 + condição → "Ascended") — o nivelamento e a fusão em si já existem, só falta esse próximo estágio.
-- Novas localidades (só a do Domínio Chinês existe; a arquitetura de `LocationData`/`WaveData` já suporta mais), novos tipos de inimigo e novos chefes.
-- Tela de seleção de Localidade/Modo/Desafio (a arquitetura já existe e é testável por código; falta só a UI).
+- Mais localidades e mais chefes (a arquitetura de `LocationData`/`WaveData`/`BossData`, incluindo fases de chefe, já suporta), e o Domínio Grego ganhando seu próprio chefe.
 - Progressão narrativa completa.
-- Mais conquistas, mais skins, e uma tela de seleção de skin (hoje a primeira desbloqueada é equipada automaticamente).
+- Mais conquistas e mais skins (a tela de seleção de skin já existe e funciona para qualquer quantidade).
 - Relíquias (categoria já reservada na loja, sem conteúdo ainda).
-- Bosses secretos (`BossData.secret`/`unlock_condition` já existem, sem conteúdo ainda) e o conceito dos "Quatro Cavaleiros" como possível cadeia de conteúdo secreto futura.
-- Bestiário e tela de Coleção (personagens/skins/armas/poderes/bosses/inimigos/localidades/conquistas) — hoje só Progressão e Conquistas têm tela própria.
+- Bosses secretos de verdade e a cadeia "Quatro Cavaleiros" (documentada como exemplo em `docs/CONTENT_PIPELINE.md`, sem nenhum conteúdo real ainda).
+- Comportamentos especiais de chefe por fase (dash, projéteis, invocação, telegraph visual) — a detecção de fase e o ponto de extensão (`BossEnemy._on_phase_changed()`) já existem.
+- Bestiário próprio (inimigos comuns) — a Coleção já tem abas de Personagens/Skins/Localidades/Bosses/Conquistas, mas não uma de Inimigos.
+- Botão físico "voltar" do Android tratado nas telas de Pause/Configurações antigas (as novas telas da Etapa 7 já tratam).
 - Arte final substituindo os sprites básicos atuais.
 - Balanceamento e ajuste fino de dificuldade e economia de Essência/Fragmentos Míticos.

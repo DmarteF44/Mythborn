@@ -66,6 +66,8 @@ func get_by_id(id: String) -> AchievementData:
 func _unlock(achievement: AchievementData) -> void:
 	MetaProgress.unlock_achievement(achievement.id)
 	RewardResolver.apply(achievement.reward)
+	if RunStats.active:
+		RunStats.achievements_unlocked_this_run.append(achievement.id)
 	achievement_unlocked.emit(achievement.id)
 
 

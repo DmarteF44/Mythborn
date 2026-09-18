@@ -10,6 +10,8 @@ extends Node2D
 
 
 func _ready() -> void:
+	MetaProgress.discover_location(Locations.current.id)
+
 	hud.bind_to_player(player)
 	hud.pause_requested.connect(_on_pause_requested)
 
@@ -73,4 +75,4 @@ func _on_boss_defeated(_boss_data: BossData) -> void:
 func _on_game_over() -> void:
 	MetaProgress.update_record("best_survival_time", RunStats.survival_time)
 	MetaProgress.update_record("best_level", RunStats.level_reached)
-	game_over_screen.show_results()
+	game_over_screen.show_results(player)

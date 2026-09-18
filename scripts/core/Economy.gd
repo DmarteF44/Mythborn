@@ -28,6 +28,7 @@ func reset() -> void:
 
 func add(amount: int) -> void:
 	essence += amount
+	RunStats.register_essence_earned(amount)
 	essence_changed.emit(essence)
 
 

@@ -32,7 +32,9 @@ func _spawn_boss(boss_data: BossData) -> void:
 	var spawn_position := (player.global_position + Vector2(0, -420)) if player != null else Vector2.ZERO
 
 	var boss := boss_scene.instantiate() as BossEnemy
+	boss.boss_data = boss_data # nunca confiar no default da cena — o pool pode ter vários chefes
 	boss.global_position = spawn_position
+	MetaProgress.register_boss_encounter(boss_data.id, false)
 	get_tree().current_scene.add_child(boss)
 	boss.boss_defeated.connect(_on_boss_defeated)
 

@@ -11,6 +11,7 @@ var current: LocationData
 func _ready() -> void:
 	pool = [
 		preload("res://resources/locations/china_domain.tres"),
+		preload("res://resources/locations/greek_domain.tres"),
 	]
 	current = pool[0]
 

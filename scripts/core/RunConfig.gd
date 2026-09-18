@@ -10,6 +10,11 @@ var challenges: Array[ChallengeData] = []
 var current_mode: GameModeData
 var current_challenge: ChallengeData = null ## null = nenhum desafio ativo
 
+## Escolhidos pelo fluxo de seleção (RunSetupFlow) antes de
+## GameManager.start_new_run(); Player.gd lê selected_character_id.
+var selected_character_id: String = "wukong"
+var selected_skin_id: String = "default"
+
 
 func _ready() -> void:
 	game_modes = [
@@ -43,6 +48,14 @@ func set_mode(id: String) -> bool:
 		return false
 	current_mode = mode
 	return true
+
+
+func set_character(id: String) -> void:
+	selected_character_id = id
+
+
+func set_skin(id: String) -> void:
+	selected_skin_id = id
 
 
 func set_challenge(id: String) -> bool:

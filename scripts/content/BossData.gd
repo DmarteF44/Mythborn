@@ -16,3 +16,8 @@ extends Resource
 @export var reward: RewardData
 @export var secret: bool = false
 @export var unlock_condition: UnlockCondition
+
+## Vazio = comportamento atual (fase única, sem mudança ao longo do
+## combate). Ver BossPhaseData — ponto de extensão para chefes futuros com
+## padrões/ataques especiais por fase.
+@export var phases: Array[BossPhaseData] = []

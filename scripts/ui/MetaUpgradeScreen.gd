@@ -15,6 +15,12 @@ func _ready() -> void:
 	MetaProgress.currency_changed.connect(func(_v: int) -> void: _render())
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if visible and event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		close()
+
+
 func open() -> void:
 	_render()
 	visible = true

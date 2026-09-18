@@ -1,9 +1,11 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/MainMenu.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ui/SettingsMenu.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/ui/MetaUpgradeScreen.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/ui/AchievementsScreen.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/ui/RunSetupFlow.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/ui/CollectionScreen.tscn" id="6"]
 
 [node name="MainMenu" type="Control"]
 anchor_right = 1.0
@@ -56,10 +58,8 @@ theme_override_constants/separation = 12
 [node name="Collection" type="Button" parent="CenterContainer/VBox/FutureRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(110, 48)
-disabled = true
 theme_override_font_sizes/font_size = 14
-text = "Coleção
-(futuro)"
+text = "Coleção"
 
 [node name="Progression" type="Button" parent="CenterContainer/VBox/FutureRow"]
 layout_mode = 2
@@ -78,3 +78,7 @@ text = "Conquistas"
 [node name="MetaUpgradeScreen" parent="." instance=ExtResource("3")]
 
 [node name="AchievementsScreen" parent="." instance=ExtResource("4")]
+
+[node name="RunSetupFlow" parent="." instance=ExtResource("5")]
+
+[node name="CollectionScreen" parent="." instance=ExtResource("6")]

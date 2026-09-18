@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="LocationData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/content/LocationData.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/enemies/satyr_data.tres" id="2"]
+[ext_resource type="Script" path="res://scripts/content/WaveData.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/content/DifficultyModifier.gd" id="4"]
+
+[sub_resource type="Resource" id="Resource_wave1"]
+script = ExtResource("3")
+start_time = 0.0
+end_time = 90.0
+spawn_interval = 1.4
+elite_chance = 0.0
+enemy_pool_override = Array[EnemyData]([])
+
+[sub_resource type="Resource" id="Resource_wave2"]
+script = ExtResource("3")
+start_time = 90.0
+end_time = 999999.0
+spawn_interval = 0.9
+elite_chance = 0.0
+enemy_pool_override = Array[EnemyData]([])
+
+[sub_resource type="Resource" id="Resource_modifier"]
+script = ExtResource("4")
+health_multiplier = 1.0
+damage_multiplier = 1.0
+speed_multiplier = 1.1
+spawn_multiplier = 1.1
+xp_multiplier = 1.0
+reward_multiplier = 1.0
+
+[resource]
+script = ExtResource("1")
+id = "greek_domain"
+display_name = "Domínio Grego"
+description = "Colinas e ruínas onde sátiros vigiam passagens esquecidas — mais rápidos, porém mais frágeis, que os guardiões do Domínio Chinês."
+origin = "Mitologia Grega"
+enemy_pool = Array[EnemyData]([ExtResource("2")])
+elite_pool = Array[EnemyData]([])
+boss_pool = Array[BossData]([])
+wave_profile = Array[WaveData]([SubResource("Resource_wave1"), SubResource("Resource_wave2")])
+difficulty_modifier = SubResource("Resource_modifier")
+initial_duration = 900.0
+endless_enabled = true

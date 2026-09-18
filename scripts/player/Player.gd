@@ -17,7 +17,14 @@ var _last_health: float = -1.0
 func _ready() -> void:
 	add_to_group("player")
 
+	# A run pode ter escolhido um personagem diferente do default da cena
+	# (RunSetupFlow -> RunConfig.selected_character_id); se não achar nada
+	# selecionado (ex.: testando Main.tscn direto), usa o default da cena.
+	var selected := Characters.get_by_id(RunConfig.selected_character_id)
+	if selected != null:
+		progression.character_data = selected
 	var character_data := progression.character_data
+
 	health.max_health = character_data.base_health
 	health.current_health = character_data.base_health
 	stats.base_move_speed = character_data.base_move_speed
